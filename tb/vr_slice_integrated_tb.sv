@@ -156,16 +156,16 @@ module vr_slice_integrated_tb;
 
     task automatic push_one(input logic [DATA_W-1:0] data);
         begin
+            @(negedge clk);
             in_data  = data;
             in_valid = 1'b1;
 
-            do begin
+            while (!rst_n || !in_ready) begin
                 @(negedge clk);
-            end while (!in_ready || !rst_n);
+            end
 
             @(posedge clk);
             #1;
-            @(negedge clk);
             in_valid = 1'b0;
             in_data  = '0;
         end
