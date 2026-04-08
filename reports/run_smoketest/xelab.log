@@ -1,0 +1,13 @@
+Vivado Simulator 2019.2
+Copyright 1986-1999, 2001-2019 Xilinx, Inc. All Rights Reserved.
+Running: /apps/xilinx/Vivado/2019.2/bin/unwrapped/lnx64.o/xelab -debug typical vr_slice_integrated_tb -snapshot work.sim 
+Multi-threading is on. Using 94 slave threads.
+Starting static elaboration
+Pass Through NonSizing Optimizer
+Completed static elaboration
+Starting simulation data flow analysis
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling module work.vr_slice(DATA_W=8)
+Compiling module work.vr_slice_integrated_tb
+Built simulation snapshot work.sim

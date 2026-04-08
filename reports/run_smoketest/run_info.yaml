@@ -1,0 +1,11 @@
+run_id: run_20260408_085800
+suite: smoke
+test: vr_slice
+tool: xsim
+top: vr_slice_integrated_tb
+waves: true
+sources:
+- rtl/vr_slice.sv
+- tb/vr_slice_integrated_tb.sv
+defines: []
+plusargs: []

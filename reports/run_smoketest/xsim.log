@@ -1,0 +1,275 @@
+#-----------------------------------------------------------
+# xsim v2019.2 (64-bit)
+# SW Build 2708876 on Wed Nov  6 21:39:14 MST 2019
+# IP Build 2700528 on Thu Nov  7 00:09:20 MST 2019
+# Start of session at: Wed Apr  8 08:58:06 2026
+# Process ID: 235125
+# Current directory: /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260408_085800
+# Command line: xsim -mode tcl -source {xsim.dir/work.sim/xsim_script.tcl}
+# Log file: /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260408_085800/xsim.log
+# Journal file: /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260408_085800/xsim.jou
+#-----------------------------------------------------------
+source xsim.dir/work.sim/xsim_script.tcl
+# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260408_085800/run.tcl} -onfinish quit -onerror quit
+Vivado Simulator 2019.2
+Time resolution is 1 ps
+source /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260408_085800/run.tcl
+## log_wave -r /
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+## run all
+
+============================================================
+TC01 Reset Default State
+Start time : 0 ns
+============================================================
+End time   : 47 ns
+Duration   : 47 ns
+Accepted   : 0
+Produced   : 0
+TC01 Reset Default State : PASS
+
+============================================================
+TC02 First Accept Into Empty Slice
+Start time : 47 ns
+============================================================
+End time   : 117 ns
+Duration   : 70 ns
+Accepted   : 1
+Produced   : 0
+TC02 First Accept Into Empty Slice : PASS
+
+============================================================
+TC03 First Output Transfer
+Start time : 117 ns
+============================================================
+End time   : 218 ns
+Duration   : 101 ns
+Accepted   : 1
+Produced   : 1
+TC03 First Output Transfer : PASS
+
+============================================================
+TC04 Hold Under Downstream Stall
+Start time : 218 ns
+============================================================
+End time   : 338 ns
+Duration   : 120 ns
+Accepted   : 1
+Produced   : 1
+TC04 Hold Under Downstream Stall : PASS
+
+============================================================
+TC05 Drain To Empty
+Start time : 338 ns
+============================================================
+End time   : 417 ns
+Duration   : 79 ns
+Accepted   : 1
+Produced   : 1
+TC05 Drain To Empty : PASS
+
+============================================================
+TC06 Bubble Then Refill
+Start time : 417 ns
+============================================================
+End time   : 538 ns
+Duration   : 121 ns
+Accepted   : 2
+Produced   : 2
+TC06 Bubble Then Refill : PASS
+
+============================================================
+TC07 Back-to-Back Throughput
+Start time : 538 ns
+============================================================
+End time   : 678 ns
+Duration   : 140 ns
+Accepted   : 8
+Produced   : 8
+TC07 Back-to-Back Throughput : PASS
+
+============================================================
+TC08 Alternating Input Valid
+Start time : 678 ns
+============================================================
+End time   : 838 ns
+Duration   : 160 ns
+Accepted   : 5
+Produced   : 5
+TC08 Alternating Input Valid : PASS
+
+============================================================
+TC09 Alternating Output Ready
+Start time : 838 ns
+============================================================
+End time   : 1088 ns
+Duration   : 250 ns
+Accepted   : 8
+Produced   : 8
+TC09 Alternating Output Ready : PASS
+
+============================================================
+TC10 Simultaneous Consume And Refill
+Start time : 1088 ns
+============================================================
+End time   : 1178 ns
+Duration   : 90 ns
+Accepted   : 2
+Produced   : 2
+TC10 Simultaneous Consume And Refill : PASS
+
+============================================================
+TC11 Long Burst Transfer
+Start time : 1178 ns
+============================================================
+End time   : 1439 ns
+Duration   : 261 ns
+Accepted   : 20
+Produced   : 20
+TC11 Long Burst Transfer : PASS
+
+============================================================
+TC12 Output Idle Behavior While Empty
+Start time : 1439 ns
+============================================================
+End time   : 1537 ns
+Duration   : 98 ns
+Accepted   : 0
+Produced   : 0
+TC12 Output Idle Behavior While Empty : PASS
+
+============================================================
+TC13 Input Blocking When Full And Stalled
+Start time : 1537 ns
+============================================================
+End time   : 1618 ns
+Duration   : 81 ns
+Accepted   : 1
+Produced   : 1
+TC13 Input Blocking When Full And Stalled : PASS
+
+============================================================
+TC14 Repeated Same Payload Values
+Start time : 1618 ns
+============================================================
+End time   : 1759 ns
+Duration   : 141 ns
+Accepted   : 8
+Produced   : 8
+TC14 Repeated Same Payload Values : PASS
+
+============================================================
+TC15 Corner Data Patterns
+Start time : 1759 ns
+============================================================
+End time   : 1859 ns
+Duration   : 100 ns
+Accepted   : 4
+Produced   : 4
+TC15 Corner Data Patterns : PASS
+
+============================================================
+TC16 Random Valid/Ready Throttling
+Start time : 1859 ns
+============================================================
+End time   : 3912 ns
+Duration   : 2053 ns
+Accepted   : 64
+Produced   : 64
+TC16 Random Valid/Ready Throttling : PASS
+
+============================================================
+TC17 Long Stall With Persistent Upstream Requests
+Start time : 3912 ns
+============================================================
+End time   : 4028 ns
+Duration   : 116 ns
+Accepted   : 1
+Produced   : 1
+TC17 Long Stall With Persistent Upstream Requests : PASS
+
+============================================================
+TC18 Random Burst Length Sweep
+Start time : 4028 ns
+============================================================
+End time   : 4639 ns
+Duration   : 611 ns
+Accepted   : 43
+Produced   : 43
+TC18 Random Burst Length Sweep : PASS
+
+============================================================
+TC19 Reset During Held Valid
+Start time : 4639 ns
+============================================================
+End time   : 4758 ns
+Duration   : 119 ns
+Accepted   : 0
+Produced   : 0
+TC19 Reset During Held Valid : PASS
+
+============================================================
+TC20 Reset During Streaming Traffic
+Start time : 4758 ns
+============================================================
+End time   : 4889 ns
+Duration   : 131 ns
+Accepted   : 2
+Produced   : 2
+TC20 Reset During Streaming Traffic : PASS
+
+============================================================
+TC21 Recovery Immediately After Reset
+Start time : 4889 ns
+============================================================
+End time   : 4958 ns
+Duration   : 69 ns
+Accepted   : 1
+Produced   : 1
+TC21 Recovery Immediately After Reset : PASS
+
+============================================================
+TC22 Transfer Count Accounting
+Start time : 4958 ns
+============================================================
+End time   : 5148 ns
+Duration   : 190 ns
+Accepted   : 12
+Produced   : 12
+TC22 Transfer Count Accounting : PASS
+
+============================================================
+TC23 Assertion Stress Run
+Start time : 5148 ns
+============================================================
+End time   : 8208 ns
+Duration   : 3060 ns
+Accepted   : 107
+Produced   : 107
+TC23 Assertion Stress Run : PASS
+
+============================================================
+TC24-TC28 Skid Suite
+Start time : 8208 ns
+============================================================
+Skipping skid suite because TB_SKID_EN=0
+End time   : 8209 ns
+Duration   : 1 ns
+Accepted   : 0
+Produced   : 0
+TC24-TC28 Skid Suite : PASS
+
+============================================================
+Simulation summary
+  Tests run          : 24
+  Tests failed       : 0
+  Accepted transfers : 296
+  Produced transfers : 293
+  Scoreboard issues  : 0
+  Protocol issues    : 0
+============================================================
+
+ALL TESTS PASSED
+$finish called at time : 8209 ns : File "/home/vsudhanvi/rtl-valid-ready-pipeline-slice/tb/vr_slice_integrated_tb.sv" Line 919
+exit 0
+INFO: [Common 17-206] Exiting xsim at Wed Apr  8 08:58:14 2026...
