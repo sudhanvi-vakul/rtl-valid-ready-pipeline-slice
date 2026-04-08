@@ -232,18 +232,20 @@ Assertions strengthen protocol checking for:
 
 ---
 
-## Waveform Inspection Goals
+## Best mental model
 
-Waveform evidence is used to inspect:
-- reset to empty-state behavior
-- empty-to-full transition
-- stable `out_valid` and `out_data` under stall
-- drain back to empty
-- bubble creation and later refill
-- same-cycle consume/refill throughput behavior
-- blocked input acceptance in baseline mode
-- skid capture and ordered drain in skid mode
-- transfer counters and occupancy visibility during stress
+Think of the flow like this:
+
+ - Smoke = “did I break the basics?”
+ - Flow = “does the normal baseline slice behavior work?”
+ - Stress = “does it survive harder/random/reset situations?”
+ - No-skid ref = “does baseline mode behave correctly?”
+ - Skid = “does the enhanced buffer behavior work?”
+ - W8 / W32 = “does parameterization hold?”
+ - Debug = “are debug/occupancy signals trustworthy?”
+ - Compare = “are shared skid-off/skid-on behaviors consistent?”
+ - Integrated = “does a representative combined run still look healthy?”
+
 
 ---
 
@@ -251,28 +253,54 @@ Waveform evidence is used to inspect:
 
 ```text
 rtl-valid-ready-pipeline-slice/
+├── README.md
+├── requirements.txt
+├── tests.yaml│
 ├── ci/
 ├── docs/
+│   ├── commands.md
+│   ├── debug.md
 │   ├── design_notes.md
-│   └── verification_notes.md
+│   └── verification_notes.md│
 ├── evidence/
-│   ├── logs/
 │   └── waveforms/
+│       ├── smoke_test1_results.png
+│       ├── smoke_test2_results.png
+│       └── smoke_test_passed.png
 ├── reports/
-│   └── run_*/
+│   └── .gitkeep
 ├── rtl/
-│   └── vr_slice.sv
+│   ├── vr_slice.sv
+│   └── vr_slice_smoke.sv
 ├── scripts/
+│   ├── __init__.py
+│   ├── regress.py
+│   ├── report.py
+│   ├── run.py
+│   ├── triage.py
+│   └── adapters/
+│       ├── __init__.py
+│       ├── questa.py
+│       └── xsim.py
 ├── tb/
-│   ├── assertions/
-│   ├── tests/
-│   └── vr_slice_integrated_tb.sv
+│   ├── .gitkeep
+│   ├── vr_slice_compare_tb.sv
+│   ├── vr_slice_debug_tb.sv
+│   ├── vr_slice_flow_tb.sv
+│   ├── vr_slice_integrated_smoke_tb.sv
+│   ├── vr_slice_integrated_tb.sv
+│   ├── vr_slice_noskid_ref_tb.sv
+│   ├── vr_slice_skid_tb.sv
+│   ├── vr_slice_smoke_tb.sv
+│   ├── vr_slice_stress_tb.sv
+│   ├── vr_slice_sva.sv
+│   ├── vr_slice_tb_base.sv
+│   ├── vr_slice_w32_tb.sv
+│   └── vr_slice_w8_tb.sv
 ├── tests/
-├── tools/
-├── tests.yaml
-├── README.md
-├── commands.md
-└── requirements.txt
+│   └── .gitkeep
+└── tools/
+    └── new_project.py
 ```
 
 ---
@@ -300,6 +328,20 @@ python3 -m scripts.run --tool xsim --suite regress --test vr_slice --waves
 The exact regression list depends on the entries wired into `tests.yaml`.
 
 ---
+
+## Waveform Inspection Goals
+
+Waveform evidence is used to inspect:
+- reset to empty-state behavior
+- empty-to-full transition
+- stable `out_valid` and `out_data` under stall
+- drain back to empty
+- bubble creation and later refill
+- same-cycle consume/refill throughput behavior
+- blocked input acceptance in baseline mode
+- skid capture and ordered drain in skid mode
+- transfer counters and occupancy visibility during stress
+
 
 ## Expected Outputs
 
