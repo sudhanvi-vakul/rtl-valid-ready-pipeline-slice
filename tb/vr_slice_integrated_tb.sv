@@ -56,8 +56,8 @@ module vr_slice_integrated_tb;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             exp_q.delete();
-            stall_active_prev    <= 1'b0;
-            stall_data_prev      <= '0;
+            stall_active_prev <= 1'b0;
+            stall_data_prev   <= '0;
         end else begin
             if (in_valid && in_ready) begin
                 exp_q.push_back(in_data);
@@ -116,7 +116,10 @@ module vr_slice_integrated_tb;
 
     task automatic tick(input int n);
         begin
-            repeat (n) @(posedge clk);
+            repeat (n) begin
+                @(posedge clk);
+                #1;
+            end
         end
     endtask
 
@@ -132,6 +135,7 @@ module vr_slice_integrated_tb;
 
     task automatic ensure_queue_empty(input string where_);
         begin
+            #1;
             if (exp_q.size() != 0) begin
                 $error("Expected empty scoreboard queue at %s, size=%0d", where_, exp_q.size());
                 mismatch_count = mismatch_count + 1;
@@ -147,6 +151,7 @@ module vr_slice_integrated_tb;
                 @(negedge clk);
             end while (!in_ready || !rst_n);
             @(posedge clk);
+            #1;
             @(negedge clk);
             in_valid = 1'b0;
             in_data  = '0;
@@ -166,6 +171,7 @@ module vr_slice_integrated_tb;
         begin
             out_ready = 1'b1;
             tick(n);
+            #1;
             out_ready = 1'b0;
         end
     endtask
@@ -179,6 +185,7 @@ module vr_slice_integrated_tb;
                 tick(1);
                 guard++;
             end
+            #1;
             out_ready = 1'b0;
             if (exp_q.size() != 0) begin
                 $error("Drain failed: scoreboard still holds %0d entries", exp_q.size());
@@ -199,6 +206,7 @@ module vr_slice_integrated_tb;
     task automatic finish_test(input string name, input int err_before, input int asrt_before);
         int new_errs;
         begin
+            #1;
             new_errs = (mismatch_count - err_before) + (assertion_fail_count - asrt_before);
             if (new_errs == 0) begin
                 $display("%s : PASS", name);
@@ -347,9 +355,7 @@ module vr_slice_integrated_tb;
             end
             in_valid  = 1'b0;
             in_data   = '0;
-            tick(4);
-            out_ready = 1'b0;
-            ensure_queue_empty("TC07");
+            drain_all();
             finish_test("TC07 Back-to-Back Throughput", e0, a0);
         end
     endtask
@@ -368,10 +374,7 @@ module vr_slice_integrated_tb;
                 tick(1);
             end
             in_valid  = 1'b0;
-            out_ready = 1'b1;
-            tick(4);
-            out_ready = 1'b0;
-            ensure_queue_empty("TC08");
+            drain_all();
             finish_test("TC08 Alternating Input Valid", e0, a0);
         end
     endtask
@@ -411,6 +414,7 @@ module vr_slice_integrated_tb;
             in_valid  = 1'b1;
             in_data   = 8'hA1;
             @(posedge clk);
+            #1;
             @(negedge clk);
             in_valid  = 1'b0;
             out_ready = 1'b0;
@@ -432,8 +436,7 @@ module vr_slice_integrated_tb;
             apply_reset();
             out_ready = 1'b1;
             push_burst(20, 8'h10);
-            tick(8);
-            out_ready = 1'b0;
+            drain_all();
             ensure_queue_empty("TC11");
             finish_test("TC11 Long Burst Transfer", e0, a0);
         end
@@ -465,7 +468,6 @@ module vr_slice_integrated_tb;
             push_one(8'hB0);
             tick(1);
             if (TB_SKID_EN) begin
-                // In skid mode, one extra capture is legal.
                 @(negedge clk);
                 in_valid = 1'b1;
                 in_data  = 8'hB1;
@@ -498,8 +500,7 @@ module vr_slice_integrated_tb;
             for (i = 0; i < 8; i++) begin
                 push_one(8'h5A);
             end
-            tick(4);
-            out_ready = 1'b0;
+            drain_all();
             ensure_queue_empty("TC14");
             finish_test("TC14 Repeated Same Payload Values", e0, a0);
         end
@@ -516,8 +517,7 @@ module vr_slice_integrated_tb;
             push_one(8'hFF);
             push_one(8'hAA);
             push_one(8'h55);
-            tick(4);
-            out_ready = 1'b0;
+            drain_all();
             ensure_queue_empty("TC15");
             finish_test("TC15 Corner Data Patterns", e0, a0);
         end
@@ -536,9 +536,10 @@ module vr_slice_integrated_tb;
                 in_data   = $urandom_range(0, (1<<DATA_W)-1);
                 out_ready = $urandom_range(0, 1);
                 @(posedge clk);
+                #1;
             end
             @(negedge clk);
-            in_valid = 1'b0;
+            in_valid  = 1'b0;
             out_ready = 1'b1;
             drain_all();
             finish_test("TC16 Random Valid/Ready Throttling", e0, a0);
@@ -591,8 +592,7 @@ module vr_slice_integrated_tb;
                 push_burst($urandom_range(1, 6), burst * 16);
                 tick($urandom_range(0, 2));
             end
-            tick(8);
-            out_ready = 1'b0;
+            drain_all();
             ensure_queue_empty("TC18");
             finish_test("TC18 Random Burst Length Sweep", e0, a0);
         end
@@ -641,8 +641,7 @@ module vr_slice_integrated_tb;
             @(negedge clk);
             in_valid  = 1'b0;
             out_ready = 1'b1;
-            tick(6);
-            out_ready = 1'b0;
+            drain_all();
             ensure_queue_empty("TC20");
             finish_test("TC20 Reset During Streaming Traffic", e0, a0);
         end
@@ -671,8 +670,7 @@ module vr_slice_integrated_tb;
             apply_reset();
             out_ready = 1'b1;
             push_burst(12, 8'h30);
-            tick(8);
-            out_ready = 1'b0;
+            drain_all();
             if ((accepted_total - acc_before) != 12) begin
                 $error("Accepted count mismatch: expected 12 got %0d", accepted_total - acc_before);
                 mismatch_count = mismatch_count + 1;
@@ -698,6 +696,7 @@ module vr_slice_integrated_tb;
                 in_data   = i;
                 out_ready = $urandom_range(0, 1);
                 @(posedge clk);
+                #1;
             end
             @(negedge clk);
             in_valid  = 1'b0;
@@ -736,19 +735,19 @@ module vr_slice_integrated_tb;
     // Main sequence
     // ------------------------------------------------------------
     initial begin
-        rst_n               = 1'b1;
-        in_valid            = 1'b0;
-        in_data             = '0;
-        out_ready           = 1'b0;
-        stall_active_prev   = 1'b0;
-        stall_data_prev     = '0;
-        accepted_total      = 0;
-        produced_total      = 0;
-        mismatch_count      = 0;
-        assertion_fail_count= 0;
-        tests_run           = 0;
-        tests_failed        = 0;
-        cycles              = 0;
+        rst_n                = 1'b1;
+        in_valid             = 1'b0;
+        in_data              = '0;
+        out_ready            = 1'b0;
+        stall_active_prev    = 1'b0;
+        stall_data_prev      = '0;
+        accepted_total       = 0;
+        produced_total       = 0;
+        mismatch_count       = 0;
+        assertion_fail_count = 0;
+        tests_run            = 0;
+        tests_failed         = 0;
+        cycles               = 0;
 
         tc01_reset_default_state();
         tc02_first_accept_into_empty();
