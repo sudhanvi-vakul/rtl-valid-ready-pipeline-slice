@@ -1,19 +1,19 @@
-suites:
-  smoke:
-    - vr_slice
-  regress:
-    - vr_slice
-
-tests:
-  vr_slice:
+smoke:
+  - name: vr_slice
     description: "Valid/ready pipeline register slice with self-checking integrated testbench"
     dut: vr_slice
     top: vr_slice_integrated_tb
     sources:
       - rtl/vr_slice.sv
       - tb/vr_slice_integrated_tb.sv
-    rtl:
+    waves: true
+
+regress:
+  - name: vr_slice
+    description: "Valid/ready pipeline register slice with self-checking integrated testbench"
+    dut: vr_slice
+    top: vr_slice_integrated_tb
+    sources:
       - rtl/vr_slice.sv
-    tb:
       - tb/vr_slice_integrated_tb.sv
     waves: true
