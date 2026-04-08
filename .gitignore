@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Simulation outputs
+work/
+xsim.dir/
+*.log
+*.jou
+*.wlf
+*.vcd
+*.fst
+*.vpd
+*.ucdb
+
+# Generated artifacts (we’ll still upload in CI)
+reports/run_*/

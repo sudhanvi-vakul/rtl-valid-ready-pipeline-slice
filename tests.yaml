@@ -1,0 +1,9 @@
+smoke:
+  - name: hello
+    top: hello_tb
+    rtl:
+      - rtl/hello.sv
+    tb:
+      - tb/hello_tb.sv
+    defines: []
+    plusargs: []
