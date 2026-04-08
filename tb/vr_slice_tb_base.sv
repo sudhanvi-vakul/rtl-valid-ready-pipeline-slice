@@ -143,6 +143,7 @@ module vr_slice_tb_base #(
         in_data   <= id;
         out_ready <= ordy;
         @(posedge clk);
+        #1;
     end
     endtask
 
@@ -300,12 +301,28 @@ module vr_slice_tb_base #(
     endtask
 
     task automatic tc09_alternating_output_ready;
+        integer sent;
+        integer cyc;
+        reg [DATA_W-1:0] next_d;
     begin
         $display("TC09 Alternating Output Ready");
         reset_dut();
-        for (i = 0; i < 5; i = i + 1) begin
-            apply_cycle(1'b1, i + 'h30, (i % 2) == 0);
+
+        sent   = 0;
+        cyc    = 0;
+        next_d = 'h30;
+
+        while (sent < 5) begin
+            apply_cycle(1'b1, next_d, (cyc % 2) == 0);
+
+            if (in_valid && in_ready) begin
+                sent   = sent + 1;
+                next_d = next_d + 1;
+            end
+
+            cyc = cyc + 1;
         end
+
         drain_cycles(6);
         check(accept_count == 5, "all five inputs must eventually be accepted");
         check(produce_count == 5, "all five inputs must eventually be produced");
