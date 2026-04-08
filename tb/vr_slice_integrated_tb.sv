@@ -62,6 +62,8 @@ module vr_slice_integrated_tb;
             exp_q.delete();
             stall_active_prev <= 1'b0;
             stall_data_prev   <= '0;
+            accepted_tc       <= 0;
+            produced_tc       <= 0;
         end else begin
             if (in_valid && in_ready) begin
                 exp_q.push_back(in_data);
@@ -131,10 +133,14 @@ module vr_slice_integrated_tb;
     task automatic apply_reset();
         begin
             clear_inputs();
+            accepted_tc = 0;
+            produced_tc = 0;
             rst_n = 1'b0;
             tick(3);
             rst_n = 1'b1;
             tick(2);
+            accepted_tc = 0;
+            produced_tc = 0;
         end
     endtask
 
@@ -761,11 +767,16 @@ module vr_slice_integrated_tb;
 
     task automatic tc22_transfer_count_accounting();
         int e0, a0;
+        int acc_before, prod_before;
         begin
             start_test("TC22 Transfer Count Accounting");
             e0 = mismatch_count;
             a0 = assertion_fail_count;
+
             apply_reset();
+
+            acc_before  = accepted_total;
+            prod_before = produced_total;
 
             out_ready = 1'b1;
             push_burst(12, 8'h30);
@@ -773,12 +784,15 @@ module vr_slice_integrated_tb;
             tick(1);
             ensure_queue_empty("TC22");
 
-            if (accepted_tc != 12) begin
-                $error("Accepted count mismatch: expected 12 got %0d", accepted_tc);
+            if ((accepted_total - acc_before) != 12) begin
+                $error("Accepted count mismatch: expected 12 got %0d",
+                    accepted_total - acc_before);
                 mismatch_count = mismatch_count + 1;
             end
-            if (produced_tc != 12) begin
-                $error("Produced count mismatch: expected 12 got %0d", produced_tc);
+
+            if ((produced_total - prod_before) != 12) begin
+                $error("Produced count mismatch: expected 12 got %0d",
+                    produced_total - prod_before);
                 mismatch_count = mismatch_count + 1;
             end
 
