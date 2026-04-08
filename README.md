@@ -1,4 +1,4 @@
-# Stage 2 - Valid/Ready Pipeline Register Slice
+# Valid/Ready Pipeline Register Slice
 
 A reusable valid/ready pipeline stage built on top of the Stage 0 RTL CI/CD backbone.
 
