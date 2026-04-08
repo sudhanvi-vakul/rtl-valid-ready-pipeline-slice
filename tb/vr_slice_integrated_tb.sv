@@ -3,7 +3,7 @@
 module vr_slice_integrated_tb;
 
     localparam int DATA_W      = 8;
-    localparam bit TB_SKID_EN  = 1'b0; // Set to 1 to run skid-mode scenarios as well.
+    localparam bit TB_SKID_EN  = 1'b0; // Set to 1 to run skid-mode scenarios.
     localparam int CLK_PERIOD  = 10;
     localparam int RANDOM_CYC  = 200;
 
@@ -34,13 +34,16 @@ module vr_slice_integrated_tb;
     logic [DATA_W-1:0] stall_data_prev;
     bit                stall_active_prev;
 
-    int accepted_total;
-    int produced_total;
-    int mismatch_count;
-    int assertion_fail_count;
-    int tests_run;
-    int tests_failed;
-    int cycles;
+    int  accepted_total;
+    int  produced_total;
+    int  accepted_tc;
+    int  produced_tc;
+    int  mismatch_count;
+    int  assertion_fail_count;
+    int  tests_run;
+    int  tests_failed;
+    int  cycles;
+    time tc_start_time;
 
     // ------------------------------------------------------------
     // Clock generation
@@ -54,6 +57,7 @@ module vr_slice_integrated_tb;
     // Scoreboard / protocol checks
     // ------------------------------------------------------------
     always @(posedge clk or negedge rst_n) begin
+        logic [DATA_W-1:0] exp;
         if (!rst_n) begin
             exp_q.delete();
             stall_active_prev <= 1'b0;
@@ -62,6 +66,7 @@ module vr_slice_integrated_tb;
             if (in_valid && in_ready) begin
                 exp_q.push_back(in_data);
                 accepted_total <= accepted_total + 1;
+                accepted_tc    <= accepted_tc + 1;
             end
 
             if (out_valid && out_ready) begin
@@ -69,7 +74,6 @@ module vr_slice_integrated_tb;
                     $error("Ghost output transfer detected: out_data=0x%0h", out_data);
                     mismatch_count <= mismatch_count + 1;
                 end else begin
-                    logic [DATA_W-1:0] exp;
                     exp = exp_q.pop_front();
                     if (out_data !== exp) begin
                         $error("Scoreboard mismatch: expected=0x%0h got=0x%0h", exp, out_data);
@@ -77,6 +81,7 @@ module vr_slice_integrated_tb;
                     end
                 end
                 produced_total <= produced_total + 1;
+                produced_tc    <= produced_tc + 1;
             end
 
             if (stall_active_prev) begin
@@ -147,9 +152,11 @@ module vr_slice_integrated_tb;
         begin
             in_data  = data;
             in_valid = 1'b1;
+
             do begin
                 @(negedge clk);
             end while (!in_ready || !rst_n);
+
             @(posedge clk);
             #1;
             @(negedge clk);
@@ -196,18 +203,31 @@ module vr_slice_integrated_tb;
 
     task automatic start_test(input string name);
         begin
-            tests_run = tests_run + 1;
+            tests_run     = tests_run + 1;
+            accepted_tc   = 0;
+            produced_tc   = 0;
+            tc_start_time = $time;
+
             $display("\n============================================================");
             $display("%s", name);
+            $display("Start time : %0t", tc_start_time);
             $display("============================================================");
         end
     endtask
 
     task automatic finish_test(input string name, input int err_before, input int asrt_before);
-        int new_errs;
+        int  new_errs;
+        time tc_end_time;
         begin
             #1;
+            tc_end_time = $time;
             new_errs = (mismatch_count - err_before) + (assertion_fail_count - asrt_before);
+
+            $display("End time   : %0t", tc_end_time);
+            $display("Duration   : %0t", tc_end_time - tc_start_time);
+            $display("Accepted   : %0d", accepted_tc);
+            $display("Produced   : %0d", produced_tc);
+
             if (new_errs == 0) begin
                 $display("%s : PASS", name);
             end else begin
@@ -224,8 +244,10 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC01 Reset Default State");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             if (out_valid !== 1'b0) begin
                 $error("Reset check failed: out_valid should be 0 after reset");
                 mismatch_count = mismatch_count + 1;
@@ -238,6 +260,7 @@ module vr_slice_integrated_tb;
                 $error("Reset check failed: full_q should be 0");
                 mismatch_count = mismatch_count + 1;
             end
+
             finish_test("TC01 Reset Default State", e0, a0);
         end
     endtask
@@ -246,15 +269,19 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC02 First Accept Into Empty Slice");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b0;
             push_one(8'hA5);
             tick(1);
+
             if (!out_valid || out_data !== 8'hA5) begin
                 $error("First accept failed: expected held payload 0xA5");
                 mismatch_count = mismatch_count + 1;
             end
+
             finish_test("TC02 First Accept Into Empty Slice", e0, a0);
         end
     endtask
@@ -263,18 +290,22 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC03 First Output Transfer");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b0;
             push_one(8'h11);
             tick(1);
             consume_cycles(2);
             tick(1);
+
             if (out_valid !== 1'b0) begin
                 $error("Stage should be empty after single drain");
                 mismatch_count = mismatch_count + 1;
             end
             ensure_queue_empty("TC03");
+
             finish_test("TC03 First Output Transfer", e0, a0);
         end
     endtask
@@ -283,15 +314,19 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC04 Hold Under Downstream Stall");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b0;
             push_one(8'hC3);
             tick(5);
+
             if (!out_valid || out_data !== 8'hC3) begin
                 $error("Hold-under-stall failed: expected payload to remain visible");
                 mismatch_count = mismatch_count + 1;
             end
+
             drain_all();
             finish_test("TC04 Hold Under Downstream Stall", e0, a0);
         end
@@ -301,16 +336,20 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC05 Drain To Empty");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b0;
             push_one(8'h33);
             drain_all();
             tick(1);
+
             if (out_valid !== 1'b0) begin
                 $error("Drain-to-empty failed: out_valid should drop after final transfer");
                 mismatch_count = mismatch_count + 1;
             end
+
             finish_test("TC05 Drain To Empty", e0, a0);
         end
     endtask
@@ -319,22 +358,28 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC06 Bubble Then Refill");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             push_one(8'h44);
             drain_all();
             tick(2);
+
             if (out_valid !== 1'b0) begin
                 $error("Bubble check failed: stage should be empty before refill");
                 mismatch_count = mismatch_count + 1;
             end
+
             out_ready = 1'b0;
             push_one(8'h55);
             tick(1);
+
             if (!out_valid || out_data !== 8'h55) begin
                 $error("Refill failed after bubble");
                 mismatch_count = mismatch_count + 1;
             end
+
             drain_all();
             finish_test("TC06 Bubble Then Refill", e0, a0);
         end
@@ -345,16 +390,19 @@ module vr_slice_integrated_tb;
         int i;
         begin
             start_test("TC07 Back-to-Back Throughput");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b1;
             for (i = 0; i < 8; i++) begin
                 in_valid = 1'b1;
                 in_data  = 8'h60 + i;
                 tick(1);
             end
-            in_valid  = 1'b0;
-            in_data   = '0;
+            in_valid = 1'b0;
+            in_data  = '0;
+
             drain_all();
             finish_test("TC07 Back-to-Back Throughput", e0, a0);
         end
@@ -365,15 +413,18 @@ module vr_slice_integrated_tb;
         int i;
         begin
             start_test("TC08 Alternating Input Valid");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b1;
             for (i = 0; i < 10; i++) begin
                 in_valid = i[0];
                 in_data  = 8'h80 + i;
                 tick(1);
             end
-            in_valid  = 1'b0;
+            in_valid = 1'b0;
+
             drain_all();
             finish_test("TC08 Alternating Input Valid", e0, a0);
         end
@@ -384,8 +435,10 @@ module vr_slice_integrated_tb;
         int i;
         begin
             start_test("TC09 Alternating Output Ready");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             fork
                 push_burst(8, 8'h90);
                 begin
@@ -396,6 +449,7 @@ module vr_slice_integrated_tb;
                     out_ready = 1'b0;
                 end
             join
+
             drain_all();
             finish_test("TC09 Alternating Output Ready", e0, a0);
         end
@@ -405,10 +459,13 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC10 Simultaneous Consume And Refill");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b0;
             push_one(8'hA0);
+
             @(negedge clk);
             out_ready = 1'b1;
             in_valid  = 1'b1;
@@ -419,10 +476,12 @@ module vr_slice_integrated_tb;
             in_valid  = 1'b0;
             out_ready = 1'b0;
             tick(1);
+
             if (!out_valid || out_data !== 8'hA1) begin
                 $error("Consume+refill failed: expected new payload to remain resident");
                 mismatch_count = mismatch_count + 1;
             end
+
             drain_all();
             finish_test("TC10 Simultaneous Consume And Refill", e0, a0);
         end
@@ -432,12 +491,15 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC11 Long Burst Transfer");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b1;
             push_burst(20, 8'h10);
             drain_all();
             ensure_queue_empty("TC11");
+
             finish_test("TC11 Long Burst Transfer", e0, a0);
         end
     endtask
@@ -446,14 +508,18 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC12 Output Idle Behavior While Empty");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b1;
             tick(5);
+
             if (out_valid !== 1'b0) begin
                 $error("Empty-idle failure: out_valid should stay low while empty");
                 mismatch_count = mismatch_count + 1;
             end
+
             finish_test("TC12 Output Idle Behavior While Empty", e0, a0);
         end
     endtask
@@ -462,11 +528,14 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC13 Input Blocking When Full And Stalled");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b0;
             push_one(8'hB0);
             tick(1);
+
             if (TB_SKID_EN) begin
                 @(negedge clk);
                 in_valid = 1'b1;
@@ -484,6 +553,7 @@ module vr_slice_integrated_tb;
                     mismatch_count = mismatch_count + 1;
                 end
             end
+
             drain_all();
             finish_test("TC13 Input Blocking When Full And Stalled", e0, a0);
         end
@@ -494,12 +564,15 @@ module vr_slice_integrated_tb;
         int i;
         begin
             start_test("TC14 Repeated Same Payload Values");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b1;
             for (i = 0; i < 8; i++) begin
                 push_one(8'h5A);
             end
+
             drain_all();
             ensure_queue_empty("TC14");
             finish_test("TC14 Repeated Same Payload Values", e0, a0);
@@ -510,13 +583,16 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC15 Corner Data Patterns");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b1;
             push_one(8'h00);
             push_one(8'hFF);
             push_one(8'hAA);
             push_one(8'h55);
+
             drain_all();
             ensure_queue_empty("TC15");
             finish_test("TC15 Corner Data Patterns", e0, a0);
@@ -528,8 +604,10 @@ module vr_slice_integrated_tb;
         int i;
         begin
             start_test("TC16 Random Valid/Ready Throttling");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             for (i = 0; i < RANDOM_CYC; i++) begin
                 @(negedge clk);
                 in_valid  = $urandom_range(0, 1);
@@ -538,10 +616,12 @@ module vr_slice_integrated_tb;
                 @(posedge clk);
                 #1;
             end
+
             @(negedge clk);
             in_valid  = 1'b0;
             out_ready = 1'b1;
             drain_all();
+
             finish_test("TC16 Random Valid/Ready Throttling", e0, a0);
         end
     endtask
@@ -551,16 +631,20 @@ module vr_slice_integrated_tb;
         int i;
         begin
             start_test("TC17 Long Stall With Persistent Upstream Requests");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b0;
             for (i = 0; i < (TB_SKID_EN ? 2 : 1); i++) begin
                 push_one(8'hC0 + i);
             end
+
             @(negedge clk);
             in_valid = 1'b1;
             in_data  = 8'hCF;
             tick(5);
+
             if (TB_SKID_EN) begin
                 if (in_ready !== 1'b0) begin
                     $error("Skid mode should backpressure after both entries are occupied");
@@ -572,10 +656,12 @@ module vr_slice_integrated_tb;
                     mismatch_count = mismatch_count + 1;
                 end
             end
+
             @(negedge clk);
             in_valid  = 1'b0;
             out_ready = 1'b1;
             drain_all();
+
             finish_test("TC17 Long Stall With Persistent Upstream Requests", e0, a0);
         end
     endtask
@@ -585,13 +671,16 @@ module vr_slice_integrated_tb;
         int burst;
         begin
             start_test("TC18 Random Burst Length Sweep");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b1;
             for (burst = 0; burst < 10; burst++) begin
                 push_burst($urandom_range(1, 6), burst * 16);
                 tick($urandom_range(0, 2));
             end
+
             drain_all();
             ensure_queue_empty("TC18");
             finish_test("TC18 Random Burst Length Sweep", e0, a0);
@@ -602,8 +691,10 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC19 Reset During Held Valid");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b0;
             push_one(8'hD1);
             tick(2);
@@ -611,11 +702,13 @@ module vr_slice_integrated_tb;
             tick(2);
             rst_n = 1'b1;
             tick(2);
+
             if (out_valid !== 1'b0) begin
                 $error("Reset-during-held-valid failed: stage should be empty after reset");
                 mismatch_count = mismatch_count + 1;
             end
             ensure_queue_empty("TC19");
+
             finish_test("TC19 Reset During Held Valid", e0, a0);
         end
     endtask
@@ -624,8 +717,10 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC20 Reset During Streaming Traffic");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             fork
                 begin
                     out_ready = 1'b1;
@@ -638,11 +733,13 @@ module vr_slice_integrated_tb;
                     rst_n = 1'b1;
                 end
             join
+
             @(negedge clk);
             in_valid  = 1'b0;
             out_ready = 1'b1;
             drain_all();
             ensure_queue_empty("TC20");
+
             finish_test("TC20 Reset During Streaming Traffic", e0, a0);
         end
     endtask
@@ -651,34 +748,40 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC21 Recovery Immediately After Reset");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             push_one(8'h21);
             drain_all();
+
             finish_test("TC21 Recovery Immediately After Reset", e0, a0);
         end
     endtask
 
     task automatic tc22_transfer_count_accounting();
         int e0, a0;
-        int acc_before, prod_before;
         begin
             start_test("TC22 Transfer Count Accounting");
-            e0 = mismatch_count; a0 = assertion_fail_count;
-            acc_before  = accepted_total;
-            prod_before = produced_total;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             out_ready = 1'b1;
             push_burst(12, 8'h30);
             drain_all();
-            if ((accepted_total - acc_before) != 12) begin
-                $error("Accepted count mismatch: expected 12 got %0d", accepted_total - acc_before);
+            tick(1);
+            ensure_queue_empty("TC22");
+
+            if (accepted_tc != 12) begin
+                $error("Accepted count mismatch: expected 12 got %0d", accepted_tc);
                 mismatch_count = mismatch_count + 1;
             end
-            if ((produced_total - prod_before) != 12) begin
-                $error("Produced count mismatch: expected 12 got %0d", produced_total - prod_before);
+            if (produced_tc != 12) begin
+                $error("Produced count mismatch: expected 12 got %0d", produced_tc);
                 mismatch_count = mismatch_count + 1;
             end
+
             finish_test("TC22 Transfer Count Accounting", e0, a0);
         end
     endtask
@@ -688,8 +791,10 @@ module vr_slice_integrated_tb;
         int i;
         begin
             start_test("TC23 Assertion Stress Run");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
             apply_reset();
+
             for (i = 0; i < 300; i++) begin
                 @(negedge clk);
                 in_valid  = $urandom_range(0, 1);
@@ -698,10 +803,12 @@ module vr_slice_integrated_tb;
                 @(posedge clk);
                 #1;
             end
+
             @(negedge clk);
             in_valid  = 1'b0;
             out_ready = 1'b1;
             drain_all();
+
             finish_test("TC23 Assertion Stress Run", e0, a0);
         end
     endtask
@@ -710,7 +817,9 @@ module vr_slice_integrated_tb;
         int e0, a0;
         begin
             start_test("TC24-TC28 Skid Suite");
-            e0 = mismatch_count; a0 = assertion_fail_count;
+            e0 = mismatch_count;
+            a0 = assertion_fail_count;
+
             if (!TB_SKID_EN) begin
                 $display("Skipping skid suite because TB_SKID_EN=0");
                 finish_test("TC24-TC28 Skid Suite", e0, a0);
@@ -719,10 +828,12 @@ module vr_slice_integrated_tb;
                 out_ready = 1'b0;
                 push_one(8'hF0);
                 push_one(8'hF1);
+
                 if (dut.skid_valid_q !== 1'b1) begin
                     $error("Skid check failed: second entry was not captured in skid storage");
                     mismatch_count = mismatch_count + 1;
                 end
+
                 tick(3);
                 out_ready = 1'b1;
                 drain_all();
@@ -735,6 +846,8 @@ module vr_slice_integrated_tb;
     // Main sequence
     // ------------------------------------------------------------
     initial begin
+        $timeformat(-9, 0, " ns", 10);
+
         rst_n                = 1'b1;
         in_valid             = 1'b0;
         in_data              = '0;
@@ -743,11 +856,14 @@ module vr_slice_integrated_tb;
         stall_data_prev      = '0;
         accepted_total       = 0;
         produced_total       = 0;
+        accepted_tc          = 0;
+        produced_tc          = 0;
         mismatch_count       = 0;
         assertion_fail_count = 0;
         tests_run            = 0;
         tests_failed         = 0;
         cycles               = 0;
+        tc_start_time        = 0;
 
         tc01_reset_default_state();
         tc02_first_accept_into_empty();
