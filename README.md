@@ -1,352 +1,348 @@
-# Flow-Controlled Pipeline Register Slice with Valid/Ready Handshake and Backpressure Support
+# Valid/Ready Pipeline Register Slice
 
-A standalone RTL project that implements and verifies a reusable valid/ready pipeline register slice for synchronous datapath flow control.
+![SystemVerilog](https://img.shields.io/badge/Language-SystemVerilog-blue)
+![Microarchitecture](https://img.shields.io/badge/Focus-Handshake%20Pipeline-success)
+![Verification](https://img.shields.io/badge/Verification-Directed%20%2B%20Assertions-orange)
+![Status](https://img.shields.io/badge/Project-Advanced%20Version%20In%20Progress-yellow)
 
----
+A reusable **valid/ready pipeline register slice** built in **SystemVerilog** with:
+- baseline single-stage buffering
+- optional skid support
+- stable stall behavior
+- same-cycle consume/refill support
+- directed self-checking verification
+- handshake assertions
+- parameterized payload width
+- optional debug and occupancy visibility
 
-## Project Summary
-
-This project builds a **valid/ready pipeline register slice** in SystemVerilog. The block sits between an upstream producer and a downstream consumer and governs when data is accepted, held, and released.
-
-Although the RTL is compact, the behavior it implements is foundational in real hardware systems:
-- throughput-friendly movement of work through a pipeline
-- safe hold behavior during downstream stalls
-- clean bubble propagation through an elastic stage
-- reusable handshake logic for larger datapaths, fabrics, and interfaces
-- optional skid buffering for one-cycle backpressure absorption
-
-This repository is **self-contained**. All RTL, testbench code, scripts, documentation, and verification artifacts needed for this project live inside this repo.
-
----
-
-## Project Goal
-
-Build and verify a reusable register slice with:
-- standard `valid/ready` handshake semantics
-- correct accept/hold/release behavior
-- stable payload during stall
-- bubble insertion and removal behavior
-- no data loss, no duplication, and no ghost transfers
-- optional skid-buffer support for enhanced backpressure handling
-- reproducible simulation and artifact capture
+This project focuses on a small but important RTL primitive that I can reuse later in larger datapaths, pipeline stages, interconnect paths, and subsystem integration work.
 
 ---
 
-## Why This Project Matters
+## Table of Contents
 
-A large amount of digital design work is not only arithmetic or control logic. A major part of microarchitecture is **how work moves**.
-
-This project demonstrates the core movement rules behind:
-- CPU pipelines
-- streaming datapaths
-- NoC and router channels
-- MMIO and bus response paths
-- DMA fronts and backs
-- accelerator feeding pipelines
-- decoupled interfaces used in larger SoC blocks
-
-If a register slice is wrong, later systems can show:
-- dropped transfers
-- duplicated transfers
-- unstable output payloads under stall
-- corrupted ordering
-- dead cycles and throughput collapse
-- difficult-to-debug pipeline lockups
-
-That makes this a small project in code size, but a very important one in architectural value.
+- [Overview](#overview)
+- [Project Goals](#project-goals)
+- [Architecture](#architecture)
+- [Implemented Modules](#implemented-modules)
+- [What This Version Adds](#what-this-version-adds)
+- [Verification Strategy](#verification-strategy)
+- [Testcase Coverage](#testcase-coverage)
+- [Waveform Inspection Goals](#waveform-inspection-goals)
+- [Repository Structure](#repository-structure)
+- [How to Run](#how-to-run)
+- [Expected Outputs](#expected-outputs)
+- [What This Project Demonstrates](#what-this-project-demonstrates)
+- [Future Reuse](#future-reuse)
+- [Summary](#summary)
 
 ---
 
-## What Is Implemented
+## Overview
 
-Recommended files for this project:
+This project implements a synchronous pipeline slice that moves payloads between an upstream producer and a downstream consumer using a `valid/ready` handshake.
 
-- `rtl/vr_slice.sv`  
-  Main valid/ready register slice RTL
+The block is small, but it sits in the middle of an important microarchitecture problem:
+- accept data only when capacity exists
+- hold data stable under backpressure
+- preserve ordering exactly
+- support steady-state throughput
+- optionally absorb a short backpressure mismatch with skid storage
 
-- `rtl/vr_slice_pkg.sv` *(optional)*  
-  Common parameters, typedefs, helper constants
-
-- `tb/vr_slice_integrated_tb.sv`  
-  Self-checking integrated testbench for directed and stress scenarios
-
-- `tests.yaml`  
-  Test registration for smoke and regression-style runs
-
-- `scripts/run.py`  
-  Main reproducible execution entry point
-
-- `docs/design_notes.md`  
-  Design intent, interface reasoning, and microarchitecture notes
-
-- `docs/verification_notes.md`  
-  Advanced verification plan and closure checklist
-
-- `docs/commands.md`  
-  Runbook for setup, simulation, debug, and artifact handling
+I am using this project to build a reusable handshake building block rather than a one-off classroom register.
 
 ---
 
-## Recommended Repo Structure
+## Project Goals
+
+- Build a reusable valid/ready slice in SystemVerilog
+- Support correct stall, bubble, drain, and refill behavior
+- Preserve data ordering and transfer accounting
+- Add optional skid behavior as a clean design option
+- Verify the design with directed tests, assertions, and waveform evidence
+- Keep the implementation parameterized and reusable for later projects
+
+---
+
+## Architecture
 
 ```text
-rtl-valid-ready-pipeline-slice/
-├── README.md
-├── requirements.txt
-├── tests.yaml
-├── rtl/
-│   ├── vr_slice.sv
-│   └── vr_slice_pkg.sv                # optional
-├── tb/
-│   └── vr_slice_integrated_tb.sv
-├── scripts/
-│   ├── run.py
-│   ├── regress.py
-│   ├── triage.py
-│   └── adapters/
-│       └── xsim.py
-├── docs/
-│   ├── design_notes.md
-│   ├── verification_notes.md
-│   └── commands.md
-├── reports/
-│   └── run_<timestamp>/
-├── evidence/
-│   ├── waveforms/
-│   ├── screenshots/
-│   └── logs/
-├── ci/
-└── tools/
+                upstream side                          downstream side
+
+        in_valid
+        in_data[DATA_W-1:0]
+             |
+             v
+    +--------------------------+
+    |      vr_slice.sv         |
+    |                          |
+    |  main register stage     |
+    |  valid/ready control     |
+    |  optional skid storage   |
+    |  optional debug signals  |
+    +--------------------------+
+             |
+             +------> out_valid
+             +------> out_data[DATA_W-1:0]
+             ^
+             |
+        in_ready / out_ready handshake control
 ```
 
-### Folder intent
-
-- `rtl/` stores synthesizable design logic
-- `tb/` stores self-checking testbench code
-- `scripts/` stores reproducible execution helpers
-- `docs/` stores design, verification, and command references
-- `reports/` stores generated simulation outputs
-- `evidence/` stores curated screenshots, wave configs, and selected logs
-- `ci/` stores CI-related hooks if you later automate regressions
-
----
-
-## Interface Concept
-
-Typical register slice interface:
-
-### Upstream-facing signals
-- `in_valid` : producer indicates payload is available
-- `in_ready` : slice indicates it can accept payload
-- `in_data`  : payload entering the slice
-
-### Downstream-facing signals
-- `out_valid` : slice indicates payload is available
-- `out_ready` : consumer indicates it can accept payload
-- `out_data`  : payload leaving the slice
-
-### Infrastructure signals
-- `clk`
-- `rst_n`
-
-### Typical parameters
-- `DATA_W` : payload width
-- `SKID_EN` : enables optional skid storage behavior
-- `RESET_VALUE` *(optional)* : makes reset waveforms easier to inspect
-
----
-
-## Expected Handshake Rules
-
-The slice should obey the standard transfer model.
-
-### Input-side acceptance
-A new payload is accepted when:
+### Conceptual occupancy
 
 ```text
-in_valid && in_ready
+SKID_EN = 0
+  occupancy = 0 -> empty
+  occupancy = 1 -> main stage full
+
+SKID_EN = 1
+  occupancy = 0 -> empty
+  occupancy = 1 -> main stage full
+  occupancy = 2 -> main stage + skid entry full
 ```
-
-### Output-side consumption
-A stored payload is consumed when:
-
-```text
-out_valid && out_ready
-```
-
-### Hold-under-stall requirement
-If `out_valid=1` while `out_ready=0`, then:
-- `out_valid` must remain asserted
-- `out_data` must remain stable
-- the payload must not be overwritten or lost
-
-### Bubble behavior
-If the stage is empty, it must be able to:
-- advertise readiness upstream
-- accept a new transaction
-- later present it downstream correctly
-
-### No ghost transfers
-The stage must never invent a transaction that was not accepted at the input.
-
-### No duplication
-Each accepted input beat must map to exactly one output beat.
 
 ---
 
-## Microarchitecture Overview
+## Implemented Modules
 
-A simple non-skid register slice can be understood with two core state elements:
-- `full_q` : indicates whether the stage currently holds a valid item
-- `data_q` : stores the payload associated with that valid item
+### RTL
 
-### Behavioral intuition
-- when empty, the slice should be ready to accept data
-- when full and stalled, it should hold both valid and payload stable
-- when full and downstream consumes, it may either become empty or immediately refill in the same cycle depending on upstream activity
+#### `rtl/vr_slice.sv`
+Top-level valid/ready pipeline slice.
 
-### Important throughput case
-The case below is critical for one-beat-per-cycle flow:
-- **full + downstream consume + upstream refill in same cycle** → remain full with the new payload
+**Current design scope**
+- parameterized `DATA_W`
+- baseline single-stage buffering
+- optional skid mode through `SKID_EN`
+- optional debug and occupancy visibility
+- same-cycle consume/refill behavior
+- stable output behavior under stall
 
-That is what allows a register slice to sustain flow instead of introducing avoidable bubbles.
+### Testbench
+
+#### `tb/vr_slice_integrated_tb.sv`
+Main self-checking testbench used for directed scenarios, scoreboard-style checks, and transfer accounting.
+
+### Assertions
+
+#### `tb/assertions/` *(planned / current enhancement area)*
+Handshake stability and protocol safety checks such as:
+- hold valid under stall
+- hold data under stall
+- reset clears interface state cleanly
+- optional occupancy legality checks
 
 ---
 
-## Optional Skid Buffer Mode
+## What This Version Adds
 
-A skid-capable slice adds a temporary second holding location so that one extra beat can be absorbed under controlled backpressure conditions.
+Compared to the baseline slice, this advanced version adds:
 
-### Why skid mode matters
-It helps when:
-- downstream backpressure arrives at a timing-sensitive boundary
-- immediate upstream throttling is undesirable
-- one-cycle absorption improves throughput or timing closure options
+- **optional skid mode**  
+  lets the slice absorb one extra beat during short backpressure events
 
-### What must be proven in skid mode
-- no payload overwrite occurs
-- ordering is preserved across main and skid storage
-- skid capture only happens in legal situations
-- skid release back into the main path is correct
-- no extra or missing transfers appear at the output
+- **handshake assertions**  
+  checks protocol stability during stall and reset behavior
+
+- **parameter sweep for `DATA_W`**  
+  verifies the block across multiple payload widths
+
+- **optional debug and occupancy signals**  
+  makes waveform review and testcase debugging easier
+
+- **separate directed tests**  
+  keeps verification focused instead of relying only on one large integrated scenario
+
+These additions make the block more reusable in later projects.
+
+In other words, the original directed plan was 28 tests, and the advanced implementation path closes at 32 tests once the added enhancement-focused checks are included.
 
 ---
 
 ## Verification Strategy
 
-The project should be verified with a **self-checking integrated testbench** that covers both directed and stress scenarios.
+Verification uses three layers together. The original base plan tracked 28 tests through TC28. For the advanced version I am actually implementing, the closure target is 32 tests, with four added cases for width-specific sanity, debug visibility, and skid/non-skid comparison.
 
-Core verification targets include:
-- reset state correctness
-- empty-stage acceptance behavior
-- full-stage stall hold behavior
-- back-to-back throughput behavior
-- simultaneous consume-and-refill behavior
-- random valid/ready toggling
-- payload order preservation
-- optional skid behavior under one-cycle backpressure events
 
-The detailed closure plan lives in:
-- `docs/verification_notes.md`
+### Directed tests
+Focused scenarios for:
+- reset
+- first accept
+- first drain
+- hold under stall
+- bubble then refill
+- same-cycle consume/refill
+- skid capture and drain
+- transfer counting
+- width sweep behavior
 
----
+### Self-checking comparison
+The testbench tracks accepted and delivered transfers to catch:
+- dropped transactions
+- duplicate transactions
+- ordering errors
+- count mismatches
 
-## Evidence to Capture
-
-For a strong GitHub portfolio repo, keep curated proof artifacts such as:
-- saved waveform configuration file
-- screenshots showing reset behavior
-- screenshots showing stall hold stability
-- screenshots showing simultaneous consume/refill
-- screenshots showing skid capture and release, if implemented
-- selected logs showing testcase names and PASS status
-
-Suggested evidence locations:
-- `evidence/waveforms/`
-- `evidence/screenshots/`
-- `evidence/logs/`
+### Assertions
+Assertions strengthen protocol checking for:
+- stable `out_valid` under stall
+- stable `out_data` under stall
+- clean reset behavior
+- optional skid legality / occupancy legality
 
 ---
 
-## Tool Flow
+## Testcase Coverage
 
-This project is intended to run with a lightweight, reproducible simulation flow.
+| Test ID | Name | Scope | Status |
+|---|---|---|---|
+| TC01 | Reset Default State | baseline | TODO |
+| TC02 | First Accept Into Empty Slice | baseline | TODO |
+| TC03 | First Output Transfer | baseline | TODO |
+| TC04 | Hold Under Downstream Stall | baseline | TODO |
+| TC05 | Drain To Empty | baseline | TODO |
+| TC06 | Bubble Then Refill | baseline | TODO |
+| TC07 | Back-to-Back Throughput | baseline | TODO |
+| TC08 | Alternating Input Valid | baseline | TODO |
+| TC09 | Alternating Output Ready | baseline | TODO |
+| TC10 | Simultaneous Consume And Refill | baseline | TODO |
+| TC11 | Long Burst Transfer | baseline | TODO |
+| TC12 | Output Idle Behavior While Empty | baseline | TODO |
+| TC13 | Input Blocking When Full And Stalled | baseline | TODO |
+| TC14 | Repeated Same Payload Values | baseline | TODO |
+| TC15 | Corner Data Patterns | baseline | TODO |
+| TC16 | Random Valid/Ready Throttling | stress | TODO |
+| TC17 | Long Stall With Persistent Upstream Requests | stress | TODO |
+| TC18 | Random Burst Length Sweep | stress | TODO |
+| TC19 | Reset During Held Valid | reset robustness | TODO |
+| TC20 | Reset During Streaming Traffic | reset robustness | TODO |
+| TC21 | Recovery Immediately After Reset | reset robustness | TODO |
+| TC22 | Transfer Count Accounting | accounting | TODO |
+| TC23 | Assertion Stress Run | assertions | TODO |
+| TC24 | Skid Disabled Reference Behavior | skid reference | TODO |
+| TC25 | Skid Single Extra Capture | skid | TODO |
+| TC26 | Skid Hold And Drain Ordering | skid | TODO |
+| TC27 | Skid With Repeated Backpressure Pulses | skid | TODO |
+| TC28 | Skid Random Traffic Stress | skid | TODO |
+| TC29 | DATA_W = 8 Sanity Run | width sweep | TODO |
+| TC30 | DATA_W = 32 Sanity Run | width sweep | TODO |
+| TC31 | Occupancy / Debug Signal Consistency | debug visibility | TODO |
+| TC32 | Skid On/Off Shared Scenario Comparison | regression | TODO |
 
-Example environment:
-- Python 3
-- XSim (Vivado 2019.2 on Nobel)
-- waveform inspection through `.wdb` outputs
+---
 
-Primary execution style:
+## Waveform Inspection Goals
+
+Waveform evidence is used to inspect:
+- reset to empty-state behavior
+- empty-to-full transition
+- stable `out_valid` and `out_data` under stall
+- drain back to empty
+- bubble creation and later refill
+- same-cycle consume/refill throughput behavior
+- blocked input acceptance in baseline mode
+- skid capture and ordered drain in skid mode
+- transfer counters and occupancy visibility during stress
+
+---
+
+## Repository Structure
+
+```text
+rtl-valid-ready-pipeline-slice/
+├── ci/
+├── docs/
+│   ├── design_notes.md
+│   └── verification_notes.md
+├── evidence/
+│   ├── logs/
+│   └── waveforms/
+├── reports/
+│   └── run_*/
+├── rtl/
+│   └── vr_slice.sv
+├── scripts/
+├── tb/
+│   ├── assertions/
+│   ├── tests/
+│   └── vr_slice_integrated_tb.sv
+├── tests/
+├── tools/
+├── tests.yaml
+├── README.md
+├── commands.md
+└── requirements.txt
+```
+
+---
+
+## How to Run
+
+Example smoke run:
 
 ```bash
 python3 -m scripts.run --tool xsim --suite smoke --test vr_slice --waves
 ```
 
-More detailed commands are documented in:
-- `docs/commands.md`
-
----
-
-## Skills Demonstrated
-
-This project demonstrates:
-- SystemVerilog RTL design
-- valid/ready handshake design
-- synchronous flow-control microarchitecture
-- backpressure-aware datapath behavior
-- self-checking testbench development
-- waveform-based debug and evidence capture
-- reproducible simulation workflow organization
-
----
-
-## Suggested Extensions
-
-After the baseline slice is correct, useful extensions include:
-- optional skid buffer implementation
-- parameterized payload structs via packed types
-- assertion checks for payload stability and handshake legality
-- randomized traffic stress testing
-- coverage collection for accept/hold/release/skid events
-- chaining multiple slices to study latency and throughput effects
-
----
-
-## Project Positioning
-
-This repository is written as a **standalone RTL portfolio project**.
-
-It can later be reused inside larger pipelines, SoC subsystems, or interface paths, but this repo is intentionally scoped as an independent block-level design and verification effort with its own closure, evidence, and documentation.
-
----
-
-## Quick Start
+Example regression pattern:
 
 ```bash
-python3 -m scripts.run --tool xsim --suite smoke --test vr_slice --waves
+python3 -m scripts.run --tool xsim --suite regress --test vr_slice --waves
 ```
 
-Then inspect:
-- generated reports under `reports/`
-- waveform database under the latest run directory
-- curated evidence under `evidence/`
+Example width sweep pattern:
+
+```bash
+python3 -m scripts.run --tool xsim --suite regress --test vr_slice --waves
+```
+
+The exact regression list depends on the entries wired into `tests.yaml`.
 
 ---
 
-## Current Status Template
+## Expected Outputs
 
-Use this section later to summarize progress.
+Typical generated artifacts include:
+- compile logs
+- simulation logs
+- waveform database files
+- run-specific report folders under `reports/run_*`
+- testcase summary text in logs
+- curated screenshots under `evidence/waveforms/`
 
-- RTL implementation: TODO / IN PROGRESS / DONE
-- Integrated testbench: TODO / IN PROGRESS / DONE
-- Directed scenario closure: TODO / IN PROGRESS / DONE
-- Skid-mode closure: TODO / IN PROGRESS / DONE
-- Curated waveform evidence: TODO / IN PROGRESS / DONE
-- README polish and final screenshots: TODO / IN PROGRESS / DONE
+Typical files include:
+- `xsim.log`
+- `xvlog.log`
+- `work.sim.wdb`
+- `run.tcl`
 
 ---
 
-## License / Usage
+## What This Project Demonstrates
 
-Use the license model you prefer for your project repositories.
+- reusable **valid/ready handshake RTL**
+- practical **pipeline control design**
+- correct **stall / bubble / refill behavior**
+- optional **skid buffering**
+- **directed + assertion-based verification**
+- **parameterized RTL verification**
+- structured evidence through **logs and waveforms**
+
+---
+
+## Future Reuse
+
+This block is intended to be reused later as:
+- a standard pipeline register slice
+- a reusable handshake-checking reference
+- a template for other flow-control blocks
+- a clean starting point for larger datapath integration
+
+The value of this project is not just that the design works, but that the design style and verification style can carry forward into later stages.
+
+---
+
+## Summary
+
+This project implements a reusable **valid/ready pipeline register slice** with optional skid support, directed verification, handshake assertions, parameterized width support, and waveform-based evidence. It serves as a foundational flow-control block for later RTL and microarchitecture projects where safe data movement under backpressure matters as much as the datapath itself.

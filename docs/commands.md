@@ -39,9 +39,7 @@ ls
 
 ---
 
-## Initialize this project from your local template repo (Windows)
-
-If you want to copy your reusable local RTL project skeleton into a new repo folder:
+## Initialize this project from your local template repo
 
 ```bat
 cd C:\Users\sudha\Documents
@@ -76,14 +74,6 @@ git push -u origin main --force-with-lease
 ```csh
 python3 -m scripts.run --tool xsim --suite smoke --test vr_slice --waves
 ```
-
-### If your registered test name differs
-Examples:
-```csh
-python3 -m scripts.run --tool xsim --suite smoke --test regslice --waves
-python3 -m scripts.run --tool xsim --suite smoke --test valid_ready_slice --waves
-```
-
 ---
 
 ## Regression run

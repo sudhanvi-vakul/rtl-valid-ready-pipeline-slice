@@ -1,95 +1,128 @@
 `timescale 1ns/1ps
 
 module vr_slice #(
-    parameter int DATA_W  = 32,
-    parameter bit SKID_EN = 1'b0
+    parameter integer DATA_W  = 16,
+    parameter integer SKID_EN = 0,
+    parameter integer DBG_EN  = 1
 ) (
-    input  logic              clk,
-    input  logic              rst_n,
-    input  logic              in_valid,
-    output logic              in_ready,
-    input  logic [DATA_W-1:0] in_data,
-    output logic              out_valid,
-    input  logic              out_ready,
-    output logic [DATA_W-1:0] out_data
+    input  wire                 clk,
+    input  wire                 rst_n,
+
+    input  wire                 in_valid,
+    output wire                 in_ready,
+    input  wire [DATA_W-1:0]    in_data,
+
+    output wire                 out_valid,
+    input  wire                 out_ready,
+    output wire [DATA_W-1:0]    out_data,
+
+    output wire                 dbg_accept,
+    output wire                 dbg_produce,
+    output wire                 dbg_hold,
+    output wire                 dbg_skid_active,
+    output wire [1:0]           dbg_occupancy
 );
 
-    localparam int DEPTH = (SKID_EN) ? 2 : 1;
+    reg                  main_valid_q;
+    reg [DATA_W-1:0]     main_data_q;
+    reg                  skid_valid_q;
+    reg [DATA_W-1:0]     skid_data_q;
 
-    // Main stage entry (oldest item presented downstream)
-    logic              full_q;
-    logic [DATA_W-1:0] data_q;
+    wire take_out;
+    wire take_in;
 
-    // Optional skid entry (second item, only used when SKID_EN=1)
-    logic              skid_valid_q;
-    logic [DATA_W-1:0] skid_data_q;
+    assign out_valid = main_valid_q;
+    assign out_data  = main_data_q;
 
-    logic [1:0] occupancy;
-    logic       pop;
-    logic       push;
+    assign take_out = main_valid_q && out_ready;
 
-    logic              full_n;
-    logic [DATA_W-1:0] data_n;
-    logic              skid_valid_n;
-    logic [DATA_W-1:0] skid_data_n;
-
-    always_comb begin
-        occupancy = 2'(full_q) + 2'(skid_valid_q);
-
-        out_valid = full_q;
-        out_data  = data_q;
-
-        pop      = out_valid && out_ready;
-        in_ready = (occupancy < DEPTH) || pop;
-        push     = in_valid && in_ready;
-
-        // Default hold state.
-        full_n       = full_q;
-        data_n       = data_q;
-        skid_valid_n = (SKID_EN) ? skid_valid_q : 1'b0;
-        skid_data_n  = skid_data_q;
-
-        // Step 1: remove oldest entry if downstream consumes it.
-        if (pop) begin
-            if (SKID_EN && skid_valid_q) begin
-                full_n       = 1'b1;
-                data_n       = skid_data_q;
-                skid_valid_n = 1'b0;
-            end else begin
-                full_n       = 1'b0;
-                skid_valid_n = 1'b0;
-            end
+    generate
+        if (SKID_EN != 0) begin : g_skid_ready
+            assign in_ready = (!skid_valid_q) || take_out;
+        end else begin : g_noskid_ready
+            assign in_ready = (!main_valid_q) || take_out;
         end
+    endgenerate
 
-        // Step 2: append a newly accepted entry to the tail.
-        if (push) begin
-            if (!full_n) begin
-                full_n = 1'b1;
-                data_n = in_data;
-            end else if (SKID_EN && !skid_valid_n) begin
-                skid_valid_n = 1'b1;
-                skid_data_n  = in_data;
-            end
+    assign take_in = in_valid && in_ready;
+
+    wire [1:0] occupancy_int;
+    assign occupancy_int = {1'b0, main_valid_q} + {1'b0, skid_valid_q};
+
+    generate
+        if (DBG_EN != 0) begin : g_dbg_on
+            assign dbg_accept      = take_in;
+            assign dbg_produce     = take_out;
+            assign dbg_hold        = main_valid_q && !out_ready;
+            assign dbg_skid_active = skid_valid_q;
+            assign dbg_occupancy   = occupancy_int;
+        end else begin : g_dbg_off
+            assign dbg_accept      = 1'b0;
+            assign dbg_produce     = 1'b0;
+            assign dbg_hold        = 1'b0;
+            assign dbg_skid_active = 1'b0;
+            assign dbg_occupancy   = 2'b00;
         end
+    endgenerate
 
-        // Keep unused skid data deterministic in non-skid mode.
-        if (!SKID_EN) begin
-            skid_valid_n = 1'b0;
-            skid_data_n  = '0;
-        end
-    end
-
-    always_ff @(posedge clk or negedge rst_n) begin
+    always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            full_q       <= 1'b0;
-            data_q       <= '0;
+            main_valid_q <= 1'b0;
+            main_data_q  <= {DATA_W{1'b0}};
             skid_valid_q <= 1'b0;
-            skid_data_q  <= '0;
+            skid_data_q  <= {DATA_W{1'b0}};
         end else begin
-            full_q       <= full_n;
-            data_q       <= data_n;
-            skid_valid_q <= skid_valid_n;
-            skid_data_q  <= skid_data_n;
+            if (SKID_EN != 0) begin
+                if (take_out) begin
+                    if (skid_valid_q) begin
+                        main_valid_q <= 1'b1;
+                        main_data_q  <= skid_data_q;
+                        if (take_in) begin
+                            skid_valid_q <= 1'b1;
+                            skid_data_q  <= in_data;
+                        end else begin
+                            skid_valid_q <= 1'b0;
+                            skid_data_q  <= skid_data_q;
+                        end
+                    end else begin
+                        if (take_in) begin
+                            main_valid_q <= 1'b1;
+                            main_data_q  <= in_data;
+                        end else begin
+                            main_valid_q <= 1'b0;
+                            main_data_q  <= main_data_q;
+                        end
+                        skid_valid_q <= 1'b0;
+                        skid_data_q  <= skid_data_q;
+                    end
+                end else begin
+                    if (take_in) begin
+                        if (!main_valid_q) begin
+                            main_valid_q <= 1'b1;
+                            main_data_q  <= in_data;
+                        end else if (!skid_valid_q) begin
+                            skid_valid_q <= 1'b1;
+                            skid_data_q  <= in_data;
+                        end
+                    end
+                end
+            end else begin
+                skid_valid_q <= 1'b0;
+                skid_data_q  <= {DATA_W{1'b0}};
+
+                if (take_out) begin
+                    if (take_in) begin
+                        main_valid_q <= 1'b1;
+                        main_data_q  <= in_data;
+                    end else begin
+                        main_valid_q <= 1'b0;
+                        main_data_q  <= main_data_q;
+                    end
+                end else if (take_in) begin
+                    main_valid_q <= 1'b1;
+                    main_data_q  <= in_data;
+                end
+            end
         end
     end
 

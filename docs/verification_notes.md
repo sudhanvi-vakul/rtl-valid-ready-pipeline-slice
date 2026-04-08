@@ -1,4 +1,4 @@
-# Verification Notes - Valid/Ready Pipeline Register Slice
+# Verification Notes - Valid/Ready Pipeline Register Slice (Advanced Version)
 
 ---
 
@@ -13,6 +13,8 @@ Prove that the valid/ready register slice:
 - handles bubble creation/removal correctly
 - optionally absorbs one-cycle backpressure in skid mode
 - resets cleanly and recovers correctly
+- scales across multiple values of `DATA_W`
+- exposes truthful debug / occupancy visibility if those signals are implemented
 
 This verification plan is intentionally written at an **advanced** level so you can execute it gradually and still know the final closure target from day one.
 
@@ -29,7 +31,17 @@ Assume a DUT interface similar to:
 - `out_valid`
 - `out_ready`
 - `out_data[DATA_W-1:0]`
-- optional internal visibility: `full_q`, `data_q`, `skid_valid_q`, `skid_data_q`
+
+Optional internal / debug visibility:
+- `full_q`
+- `data_q`
+- `skid_valid_q`
+- `skid_data_q`
+- `dbg_accept`
+- `dbg_produce`
+- `dbg_hold`
+- `dbg_skid_active`
+- `dbg_occupancy`
 
 ---
 
@@ -41,10 +53,13 @@ Run carefully staged deterministic scenarios.
 ### Scoreboard checking
 Maintain an expected queue:
 - push on `in_valid && in_ready`
-- pop+compare on `out_valid && out_ready`
+- pop + compare on `out_valid && out_ready`
 
 ### Assertion checking
 Protocol safety assertions should supplement scoreboard checks.
+
+### Parameter sweep
+Repeat selected runs across multiple values of `DATA_W` and across both `SKID_EN=0/1` modes.
 
 ### Waveform evidence
 Capture screenshots for major behavioral categories.
@@ -54,11 +69,12 @@ Capture screenshots for major behavioral categories.
 ## 4) Pass Criteria
 
 A testcase passes only if all below are true:
-- no TB fatal/error/mismatch
+- no TB fatal / error / mismatch
 - no scoreboard mismatch
 - transfer count matches expectations
 - no assertion failures
-- wave behavior matches intended scenario
+- waveform behavior matches intended scenario
+- debug / occupancy visibility matches observed DUT state if those signals are exposed
 
 ---
 
@@ -84,9 +100,34 @@ These checks should be reused in multiple scenarios:
 6. **Payload stability under stall**  
    If `out_valid=1` and `out_ready=0`, then output payload and validity remain stable.
 
+7. **Occupancy legality**  
+   Occupancy never exceeds legal capacity for the selected mode.
+
+8. **Debug truthfulness**  
+   Optional debug indicators must agree with actual DUT behavior.
+
 ---
 
-## 6) Testcase Index
+## 6) Verification Buckets
+
+### Bucket A - Smoke
+Minimal sanity test for compile/elaborate/basic transfer.
+
+### Bucket B - Directed baseline
+Core protocol behavior with `SKID_EN=0`.
+
+### Bucket C - Directed skid
+Elastic behavior with `SKID_EN=1`.
+
+### Bucket D - Assertion stress
+Longer randomized ready/valid activity with assertions enabled.
+
+### Bucket E - Width sweep
+Focused reruns at `DATA_W=8/16/32/64` or the widths you choose to support.
+
+---
+
+## 7) Testcase Index
 
 ### Baseline functional tests
 - TC01 Reset Default State
@@ -122,9 +163,15 @@ These checks should be reused in multiple scenarios:
 - TC27 Skid With Repeated Backpressure Pulses
 - TC28 Skid Random Traffic Stress
 
+### Width / parameter checks
+- TC29 DATA_W=8 Sanity
+- TC30 DATA_W=16 Sanity
+- TC31 DATA_W=32 Sanity
+- TC32 DATA_W=64 Sanity
+
 ---
 
-## 7) Detailed Testcases
+## 8) Detailed Testcases
 
 ---
 
@@ -140,11 +187,12 @@ Verify DUT powers up or resets into a clean empty state.
 - release reset after several clocks
 
 **Checks**  
-- `out_valid = 0` during/after reset until data is accepted
+- `out_valid = 0` during / after reset until data is accepted
 - no output transfer occurs
 - internal occupancy is empty (`full_q=0` if visible)
 - `in_ready` indicates capacity after reset release
-- optional debug data registers may reset to known value for readability
+- optional debug registers may reset to known value for readability
+- if `dbg_occupancy` exists, it indicates empty state
 
 **Waveform focus**  
 Capture reset assertion and release with empty-state outputs.
@@ -168,6 +216,7 @@ Verify first transaction is accepted correctly when the slice is empty.
 - payload is captured correctly
 - `out_valid` asserts after capture behavior consistent with design timing
 - stored payload matches expected value
+- optional debug accept indication pulses correctly
 
 **Waveform focus**  
 Show empty-to-full transition.
@@ -191,6 +240,7 @@ Verify a stored transaction is delivered correctly to downstream.
 - output transfer occurs exactly once on handshake
 - delivered payload matches first accepted payload
 - stage becomes empty afterward if no refill occurs
+- optional debug produce indication pulses correctly
 
 **Waveform focus**  
 Show accepted input beat and later delivered output beat.
@@ -214,6 +264,7 @@ Prove payload and validity remain stable when consumer stalls.
 - `out_data` remains constant for the entire stall interval
 - no unexpected output handshakes occur
 - no overwrite occurs from additional input attempts in baseline mode
+- optional `dbg_hold` indicates held-valid condition during stall
 
 **Waveform focus**  
 This is one of the most important screenshots.
@@ -257,7 +308,7 @@ Verify empty interval (bubble) is handled cleanly before a later refill.
 **Checks**  
 - no output activity during bubble
 - no ghost output payloads during empty interval
-- new payload is later accepted/delivered correctly
+- new payload is later accepted / delivered correctly
 
 **Waveform focus**  
 Show empty interval clearly between two real transactions.
@@ -346,6 +397,7 @@ Verify same-cycle output consumption and input refill is handled correctly.
 - new payload enters the stage without introducing a throughput bubble
 - stage stays occupied after the cycle
 - no duplicate or skipped data
+- optional occupancy remains truthful across the transition
 
 **Waveform focus**  
 This is a key microarchitecture proof point.
@@ -460,7 +512,7 @@ PASS
 ### TC16 Random Valid/Ready Throttling
 
 **Purpose**  
-Stress the protocol under many mixed producer/consumer timing combinations.
+Stress the protocol under many mixed producer / consumer timing combinations.
 
 **Stimulus**  
 - randomly toggle `in_valid`
@@ -526,7 +578,7 @@ Verify reset cleanly flushes a resident transaction.
 - assert reset while payload is held
 
 **Checks**  
-- state returns to empty/reset condition
+- state returns to empty / reset condition
 - previously held payload is discarded by reset semantics
 - after release, DUT resumes normal operation cleanly
 
@@ -606,12 +658,12 @@ Use a long stress run mainly to validate protocol assertions.
 
 **Stimulus**  
 - long random traffic run
-- aggressive toggling of valid/ready
+- aggressive toggling of valid / ready
 - optional repeated resets if TB supports it clearly
 
 **Checks**  
 - no stability assertion failures
-- no illegal occupancy/overwrite assertion failures
+- no illegal occupancy / overwrite assertion failures
 - no unexpected handshake accounting errors
 
 **Expected Result**  
@@ -652,6 +704,7 @@ Verify skid-enabled DUT can absorb one extra beat under backpressure.
 - no overwrite of main entry
 - no loss of the extra beat
 - occupancy conceptually becomes two entries (main + skid)
+- if `dbg_occupancy` exists, it indicates `2`
 
 **Waveform focus**  
 Major screenshot candidate if you implement skid.
@@ -686,10 +739,10 @@ PASS
 Stress skid transitions across multiple short stalls.
 
 **Stimulus**  
-- alternate downstream ready/stall while upstream continues sending
+- alternate downstream ready / stall while upstream continues sending
 
 **Checks**  
-- skid capture/release remains legal
+- skid capture / release remains legal
 - no duplicate or dropped payloads
 - no illegal skid overwrite
 
@@ -705,7 +758,7 @@ Close skid mode under randomized traffic.
 
 **Stimulus**  
 - `SKID_EN=1`
-- long random valid/ready sequence
+- long random valid / ready sequence
 - random payloads
 
 **Checks**  
@@ -718,7 +771,75 @@ PASS
 
 ---
 
-## 8) Assertion Recommendations
+### TC29 DATA_W=8 Sanity
+
+**Purpose**  
+Confirm no hard-coded assumptions break at a smaller width.
+
+**Stimulus**  
+- rerun a focused subset such as TC01, TC04, TC10, TC22 at `DATA_W=8`
+
+**Checks**  
+- same functional behavior holds
+- scoreboard remains clean
+
+**Expected Result**  
+PASS
+
+---
+
+### TC30 DATA_W=16 Sanity
+
+**Purpose**  
+Confirm behavior at intermediate width.
+
+**Stimulus**  
+- rerun focused subset at `DATA_W=16`
+
+**Checks**  
+- same functional behavior holds
+- scoreboard remains clean
+
+**Expected Result**  
+PASS
+
+---
+
+### TC31 DATA_W=32 Sanity
+
+**Purpose**  
+Confirm the default / main width configuration.
+
+**Stimulus**  
+- rerun focused subset at `DATA_W=32`
+
+**Checks**  
+- same functional behavior holds
+- scoreboard remains clean
+
+**Expected Result**  
+PASS
+
+---
+
+### TC32 DATA_W=64 Sanity
+
+**Purpose**  
+Confirm no width scaling bug appears at a wider payload.
+
+**Stimulus**  
+- rerun focused subset at `DATA_W=64`
+
+**Checks**  
+- same functional behavior holds
+- scoreboard remains clean
+
+**Expected Result**  
+PASS
+
+---
+
+## 9) Assertion Recommendations
 
 Recommended properties to add in TB or bind-style assertions:
 
@@ -734,15 +855,18 @@ A transfer count must never increment when `out_valid=0`.
 ### A4 - No scoreboard pop without handshake
 Pop only on `out_valid && out_ready`.
 
-### A5 - Optional occupancy legality
+### A5 - Occupancy legality
 If internal occupancy tracking exists, disallow impossible states.
 
-### A6 - Optional skid legality
+### A6 - Skid legality
 Disallow skid overwrite while skid storage is already occupied.
+
+### A7 - Optional debug consistency
+If debug outputs are exposed, ensure they agree with observed handshakes / occupancy.
 
 ---
 
-## 9) Scoreboard Recommendation
+## 10) Scoreboard Recommendation
 
 Use a TB queue such as:
 - push payload on accepted input
@@ -753,12 +877,14 @@ Also track:
 - `deliver_count`
 - max observed occupancy *(optional)*
 - number of stall cycles *(optional)*
+- number of skid captures *(optional)*
+- width setting under current run *(optional in logs)*
 
-This will help you later if you want README metrics.
+This will help later if you want README metrics or regression summaries.
 
 ---
 
-## 10) Waveform Signal List Recommendation
+## 11) Waveform Signal List Recommendation
 
 Top-level:
 - `clk`
@@ -775,13 +901,18 @@ Useful internals if visible:
 - `data_q`
 - `skid_valid_q`
 - `skid_data_q`
+- `dbg_accept`
+- `dbg_produce`
+- `dbg_hold`
+- `dbg_skid_active`
+- `dbg_occupancy`
 - TB scoreboard depth
 - TB accept counter
 - TB deliver counter
 
 ---
 
-## 11) Screenshot Plan
+## 12) Screenshot Plan
 
 Recommended named screenshots for curated evidence:
 
@@ -793,59 +924,86 @@ Recommended named screenshots for curated evidence:
 6. `tc13_input_blocking_when_full_stalled.png`  
 7. `tc19_reset_during_held_valid.png`  
 8. `tc25_skid_single_extra_capture.png` *(if skid enabled)*  
-9. `tc26_skid_hold_and_drain_ordering.png` *(if skid enabled)*
+9. `tc26_skid_hold_and_drain_ordering.png` *(if skid enabled)*  
+10. `tc29_dataw8_sanity.png` *(optional)*  
+11. `tc32_dataw64_sanity.png` *(optional)*
 
 ---
 
-## 12) Verification Status Summary Template
+## 13) Suggested Execution Order
+
+Use this order so debug stays manageable:
+
+### Phase 1 - Baseline close
+TC01 to TC15
+
+### Phase 2 - Robustness close
+TC16 to TC23
+
+### Phase 3 - Skid close
+TC24 to TC28
+
+### Phase 4 - Width close
+TC29 to TC32
+
+This order helps you lock the base behavior before expanding feature space.
+
+---
+
+## 14) Verification Status Summary Template
 
 Use this in the file later when you begin execution:
 
-| Testcase | Title | Status | Evidence | Notes |
-|---|---|---|---|---|
-| TC01 | Reset Default State | TODO |  |  |
-| TC02 | First Accept Into Empty Slice | TODO |  |  |
-| TC03 | First Output Transfer | TODO |  |  |
-| TC04 | Hold Under Downstream Stall | TODO |  |  |
-| TC05 | Drain To Empty | TODO |  |  |
-| TC06 | Bubble Then Refill | TODO |  |  |
-| TC07 | Back-to-Back Throughput | TODO |  |  |
-| TC08 | Alternating Input Valid | TODO |  |  |
-| TC09 | Alternating Output Ready | TODO |  |  |
-| TC10 | Simultaneous Consume And Refill | TODO |  |  |
-| TC11 | Long Burst Transfer | TODO |  |  |
-| TC12 | Output Idle Behavior While Empty | TODO |  |  |
-| TC13 | Input Blocking When Full And Stalled | TODO |  |  |
-| TC14 | Repeated Same Payload Values | TODO |  |  |
-| TC15 | Corner Data Patterns | TODO |  |  |
-| TC16 | Random Valid/Ready Throttling | TODO |  |  |
-| TC17 | Long Stall With Persistent Upstream Requests | TODO |  |  |
-| TC18 | Random Burst Length Sweep | TODO |  |  |
-| TC19 | Reset During Held Valid | TODO |  |  |
-| TC20 | Reset During Streaming Traffic | TODO |  |  |
-| TC21 | Recovery Immediately After Reset | TODO |  |  |
-| TC22 | Transfer Count Accounting | TODO |  |  |
-| TC23 | Assertion Stress Run | TODO |  |  |
-| TC24 | Skid Disabled Reference Behavior | TODO |  |  |
-| TC25 | Skid Single Extra Capture | TODO |  |  |
-| TC26 | Skid Hold And Drain Ordering | TODO |  |  |
-| TC27 | Skid With Repeated Backpressure Pulses | TODO |  |  |
-| TC28 | Skid Random Traffic Stress | TODO |  |  |
+| Testcase | Title | Mode / Width | Status | Evidence | Notes |
+|---|---|---|---|---|---|
+| TC01 | Reset Default State | Base / default | TODO |  |  |
+| TC02 | First Accept Into Empty Slice | Base / default | TODO |  |  |
+| TC03 | First Output Transfer | Base / default | TODO |  |  |
+| TC04 | Hold Under Downstream Stall | Base / default | TODO |  |  |
+| TC05 | Drain To Empty | Base / default | TODO |  |  |
+| TC06 | Bubble Then Refill | Base / default | TODO |  |  |
+| TC07 | Back-to-Back Throughput | Base / default | TODO |  |  |
+| TC08 | Alternating Input Valid | Base / default | TODO |  |  |
+| TC09 | Alternating Output Ready | Base / default | TODO |  |  |
+| TC10 | Simultaneous Consume And Refill | Base / default | TODO |  |  |
+| TC11 | Long Burst Transfer | Base / default | TODO |  |  |
+| TC12 | Output Idle Behavior While Empty | Base / default | TODO |  |  |
+| TC13 | Input Blocking When Full And Stalled | Base / default | TODO |  |  |
+| TC14 | Repeated Same Payload Values | Base / default | TODO |  |  |
+| TC15 | Corner Data Patterns | Base / default | TODO |  |  |
+| TC16 | Random Valid/Ready Throttling | Base / default | TODO |  |  |
+| TC17 | Long Stall With Persistent Upstream Requests | Base / default | TODO |  |  |
+| TC18 | Random Burst Length Sweep | Base / default | TODO |  |  |
+| TC19 | Reset During Held Valid | Base / default | TODO |  |  |
+| TC20 | Reset During Streaming Traffic | Base / default | TODO |  |  |
+| TC21 | Recovery Immediately After Reset | Base / default | TODO |  |  |
+| TC22 | Transfer Count Accounting | Base / default | TODO |  |  |
+| TC23 | Assertion Stress Run | Base / default | TODO |  |  |
+| TC24 | Skid Disabled Reference Behavior | SKID_EN=0 | TODO |  |  |
+| TC25 | Skid Single Extra Capture | SKID_EN=1 | TODO |  |  |
+| TC26 | Skid Hold And Drain Ordering | SKID_EN=1 | TODO |  |  |
+| TC27 | Skid With Repeated Backpressure Pulses | SKID_EN=1 | TODO |  |  |
+| TC28 | Skid Random Traffic Stress | SKID_EN=1 | TODO |  |  |
+| TC29 | DATA_W=8 Sanity | Base / 8 | TODO |  |  |
+| TC30 | DATA_W=16 Sanity | Base / 16 | TODO |  |  |
+| TC31 | DATA_W=32 Sanity | Base / 32 | TODO |  |  |
+| TC32 | DATA_W=64 Sanity | Base / 64 | TODO |  |  |
 
 ---
 
-## 13) Closure Criteria
+## 15) Closure Criteria
 
 Verification is considered complete when:
 - all selected baseline tests pass
 - scoreboard is clean across directed and random scenarios
 - assertion set is clean
 - required waveform screenshots are captured
-- optional skid mode also closes if implemented
+- skid mode also closes if implemented
+- width sweep passes for selected widths
 - README reflects actual verified feature set truthfully
 
 ---
 
-## 14) Final Verification Intent Statement
+## 16) Final Verification Intent Statement
 
-The DUT should be proven not merely functional in easy cases, but robust against realistic pipeline effects: stalls, bubbles, same-cycle consume/refill, randomized throttling, reset interruption, and optional short-term elasticity through skid buffering.
+The DUT should be proven not merely functional in easy cases, but robust against realistic pipeline effects: stalls, bubbles, same-cycle consume/refill, randomized throttling, reset interruption, optional short-term elasticity through skid buffering, and width scaling across multiple payload configurations.

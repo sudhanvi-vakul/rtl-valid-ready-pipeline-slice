@@ -1,19 +1,79 @@
 smoke:
   - name: vr_slice
-    description: "Valid/ready pipeline register slice with self-checking integrated testbench"
-    dut: vr_slice
-    top: vr_slice_integrated_tb
+    top: vr_slice_smoke_tb
     sources:
       - rtl/vr_slice.sv
-      - tb/vr_slice_integrated_tb.sv
-    waves: true
+      - tb/assertions/vr_slice_sva.sv
+      - tb/vr_slice_tb_base.sv
+      - tb/vr_slice_smoke_tb.sv
 
 regress:
-  - name: vr_slice
-    description: "Valid/ready pipeline register slice with self-checking integrated testbench"
-    dut: vr_slice
+  - name: vr_slice_flow
+    top: vr_slice_flow_tb
+    sources:
+      - rtl/vr_slice.sv
+      - tb/assertions/vr_slice_sva.sv
+      - tb/vr_slice_tb_base.sv
+      - tb/vr_slice_flow_tb.sv
+
+  - name: vr_slice_stress
+    top: vr_slice_stress_tb
+    sources:
+      - rtl/vr_slice.sv
+      - tb/assertions/vr_slice_sva.sv
+      - tb/vr_slice_tb_base.sv
+      - tb/vr_slice_stress_tb.sv
+
+  - name: vr_slice_noskid_ref
+    top: vr_slice_noskid_ref_tb
+    sources:
+      - rtl/vr_slice.sv
+      - tb/assertions/vr_slice_sva.sv
+      - tb/vr_slice_tb_base.sv
+      - tb/vr_slice_noskid_ref_tb.sv
+
+  - name: vr_slice_skid
+    top: vr_slice_skid_tb
+    sources:
+      - rtl/vr_slice.sv
+      - tb/assertions/vr_slice_sva.sv
+      - tb/vr_slice_tb_base.sv
+      - tb/vr_slice_skid_tb.sv
+
+  - name: vr_slice_w8
+    top: vr_slice_w8_tb
+    sources:
+      - rtl/vr_slice.sv
+      - tb/assertions/vr_slice_sva.sv
+      - tb/vr_slice_tb_base.sv
+      - tb/vr_slice_w8_tb.sv
+
+  - name: vr_slice_w32
+    top: vr_slice_w32_tb
+    sources:
+      - rtl/vr_slice.sv
+      - tb/assertions/vr_slice_sva.sv
+      - tb/vr_slice_tb_base.sv
+      - tb/vr_slice_w32_tb.sv
+
+  - name: vr_slice_debug
+    top: vr_slice_debug_tb
+    sources:
+      - rtl/vr_slice.sv
+      - tb/assertions/vr_slice_sva.sv
+      - tb/vr_slice_tb_base.sv
+      - tb/vr_slice_debug_tb.sv
+
+  - name: vr_slice_compare
+    top: vr_slice_compare_tb
+    sources:
+      - rtl/vr_slice.sv
+      - tb/vr_slice_compare_tb.sv
+
+  - name: vr_slice_integrated
     top: vr_slice_integrated_tb
     sources:
       - rtl/vr_slice.sv
+      - tb/assertions/vr_slice_sva.sv
+      - tb/vr_slice_tb_base.sv
       - tb/vr_slice_integrated_tb.sv
-    waves: true
