@@ -1,9 +1,15 @@
-smoke:
-  - name: hello
-    top: hello_tb
-    rtl:
-      - rtl/hello.sv
-    tb:
-      - tb/hello_tb.sv
-    defines: []
-    plusargs: []
+vr_slice:
+  description: "Valid/ready pipeline register slice with self-checking integrated testbench"
+  dut: vr_slice
+  top: vr_slice_integrated_tb
+  rtl:
+    - rtl/vr_slice.sv
+  tb:
+    - tb/vr_slice_integrated_tb.sv
+  sources:
+    - rtl/vr_slice.sv
+    - tb/vr_slice_integrated_tb.sv
+  suites:
+    - smoke
+    - regress
+  waves: true

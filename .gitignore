@@ -1,25 +1,96 @@
+# =========================
 # Python
+# =========================
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.pyo
+
 .venv/
 venv/
+env/
+ENV/
 
-# OS / Editor
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# =========================
+# Xilinx / XSim / Vivado generated files
+# Ignore them everywhere EXCEPT inside reports/
+# =========================
+xsim.dir/
+*.jou
+*.pb
+*.str
+*.vcd
+*.saif
+*.xil
+*.xil/
+.webtalk/
+webtalk*.jou
+webtalk*.log
+vivado*.jou
+vivado*.log
+xvlog*.log
+xelab*.log
+xsim*.log
+
+.sim/
+.cache/
+.hw/
+.ip_user_files/
+.Xil/
+gen/
+tmp/
+
+*.runs/
+*.gen/
+*.cache/
+*.hw/
+*.ip_user_files/
+
+# Wave/log artifacts outside reports only
+*.wdb
+!reports/**/*.wdb
+
+*.wcfg
+!reports/**/*.wcfg
+
+*.log
+!reports/**/*.log
+
+# =========================
+# Verdi / debug
+# =========================
+novas.conf
+novas.rc
+verdiLog/
+VerdiLog/
+inter.fsdb.*
+*.fsdb
+*.fsdb.*
+*.rc
+
+# =========================
+# Temp / editor / OS
+# =========================
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-
-# Simulation outputs
-work/
-xsim.dir/
-*.log
-*.jou
-*.wlf
-*.vcd
-*.fst
-*.vpd
-*.ucdb
-
-# Generated artifacts (we’ll still upload in CI)
-reports/run_*/
