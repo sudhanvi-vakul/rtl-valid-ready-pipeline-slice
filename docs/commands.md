@@ -70,11 +70,25 @@ git push -u origin main --force-with-lease
 
 ## Smoke run
 
+
 ### Main smoke command
 ```csh
 python3 -m scripts.run --tool xsim --suite smoke --test vr_slice --waves
 ```
 ---
+
+### Smoke test without waves
+
+python3 -m scripts.run --tool xsim --suite regress --test vr_slice_flow --waves
+python3 -m scripts.run --tool xsim --suite regress --test vr_slice_stress --waves
+python3 -m scripts.run --tool xsim --suite regress --test vr_slice_noskid_ref --waves
+python3 -m scripts.run --tool xsim --suite regress --test vr_slice_skid --waves
+python3 -m scripts.run --tool xsim --suite regress --test vr_slice_w8 --waves
+python3 -m scripts.run --tool xsim --suite regress --test vr_slice_w32 --waves
+python3 -m scripts.run --tool xsim --suite regress --test vr_slice_debug --waves
+python3 -m scripts.run --tool xsim --suite regress --test vr_slice_compare --waves
+python3 -m scripts.run --tool xsim --suite regress --test vr_slice_integrated --waves
+
 
 ## Regression run
 
