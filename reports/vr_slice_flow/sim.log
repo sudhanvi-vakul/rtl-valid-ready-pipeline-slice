@@ -1,0 +1,31 @@
+
+****** xsim v2019.2 (64-bit)
+  **** SW Build 2708876 on Wed Nov  6 21:39:14 MST 2019
+  **** IP Build 2700528 on Thu Nov  7 00:09:20 MST 2019
+    ** Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+
+source xsim.dir/work.sim/xsim_script.tcl
+# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260408_185334/run.tcl} -onfinish quit -onerror quit
+Vivado Simulator 2019.2
+Time resolution is 1 ps
+source /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260408_185334/run.tcl
+## log_wave -r /
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+## run all
+TC04 Hold Under Downstream Stall
+TC05 Drain To Empty
+TC06 Bubble Then Refill
+TC07 Back-to-Back Throughput
+TC08 Alternating Input Valid
+TC09 Alternating Output Ready
+TC10 Simultaneous Consume And Refill
+TC11 Long Burst Transfer
+TC12 Output Idle Behavior While Empty
+TC13 Input Blocking When Full And Stalled
+TC14 Repeated Same Payload Values
+TC15 Corner Data Patterns
+[PASS] flow
+[TB PASS] vr_slice_tb_base DATA_W=16 SKID_EN=0 TEST_GROUP=2
+$finish called at time : 1356 ns : File "/home/vsudhanvi/rtl-valid-ready-pipeline-slice/tb/vr_slice_tb_base.sv" Line 810
+exit 0
+INFO: [Common 17-206] Exiting xsim at Wed Apr  8 18:53:49 2026...
