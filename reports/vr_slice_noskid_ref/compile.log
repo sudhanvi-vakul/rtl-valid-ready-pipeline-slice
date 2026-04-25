@@ -1,0 +1,8 @@
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/vsudhanvi/rtl-valid-ready-pipeline-slice/rtl/vr_slice.sv" into library work
+INFO: [VRFC 10-311] analyzing module vr_slice
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/vsudhanvi/rtl-valid-ready-pipeline-slice/tb/assertions/vr_slice_sva.sv" into library work
+INFO: [VRFC 10-311] analyzing module vr_slice_sva
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/vsudhanvi/rtl-valid-ready-pipeline-slice/tb/vr_slice_tb_base.sv" into library work
+INFO: [VRFC 10-311] analyzing module vr_slice_tb_base
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/vsudhanvi/rtl-valid-ready-pipeline-slice/tb/vr_slice_noskid_ref_tb.sv" into library work
+INFO: [VRFC 10-311] analyzing module vr_slice_noskid_ref_tb
