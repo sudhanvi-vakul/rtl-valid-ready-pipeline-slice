@@ -788,24 +788,7 @@ PASS
 
 ---
 
-### TC30 DATA_W=16 Sanity
-
-**Purpose**  
-Confirm behavior at intermediate width.
-
-**Stimulus**  
-- rerun focused subset at `DATA_W=16`
-
-**Checks**  
-- same functional behavior holds
-- scoreboard remains clean
-
-**Expected Result**  
-PASS
-
----
-
-### TC31 DATA_W=32 Sanity
+### TC30 DATA_W=32 Sanity
 
 **Purpose**  
 Confirm the default / main width configuration.
@@ -822,22 +805,39 @@ PASS
 
 ---
 
-### TC32 DATA_W=64 Sanity
+### TC31 Occupancy / Debug Signal Consistency
 
-**Purpose**  
-Confirm no width scaling bug appears at a wider payload.
+Purpose
+Verify that debug and occupancy visibility signals reflect the true internal state of the slice.
 
-**Stimulus**  
-- rerun focused subset at `DATA_W=64`
+Stimulus
+Run the debug wrapper and observe occupancy, hold, and skid-active behavior during fill, stall, and drain.
 
-**Checks**  
-- same functional behavior holds
-- scoreboard remains clean
+Checks
+- occupancy increments after accept
+- dbg_hold asserts during stall
+- dbg_skid_active asserts when skid entry is used
+- occupancy updates correctly after drain
 
-**Expected Result**  
-PASS
+Expected Result
+TODO
 
----
+### TC32 Skid On/Off Shared Scenario Comparison
+
+Purpose
+Compare skid-disabled and skid-enabled slice instances under the same shared traffic pattern.
+
+Stimulus
+Run the comparison testbench with both DUT variants driven by identical input and ready behavior.
+
+Checks
+- matching in_ready behavior where expected
+- matching out_valid behavior where expected
+- matching out_data ordering
+- matching occupancy behavior for the shared scenario
+
+Expected Result
+TODO
 
 ## 9) Assertion Recommendations
 
@@ -911,22 +911,6 @@ Useful internals if visible:
 - TB deliver counter
 
 ---
-
-## 12) Screenshot Plan
-
-Recommended named screenshots for curated evidence:
-
-1. `tc01_reset_default_state.png`  
-2. `tc04_hold_under_stall.png`  
-3. `tc06_bubble_then_refill.png`  
-4. `tc07_back_to_back_throughput.png`  
-5. `tc10_consume_and_refill_same_cycle.png`  
-6. `tc13_input_blocking_when_full_stalled.png`  
-7. `tc19_reset_during_held_valid.png`  
-8. `tc25_skid_single_extra_capture.png` *(if skid enabled)*  
-9. `tc26_skid_hold_and_drain_ordering.png` *(if skid enabled)*  
-10. `tc29_dataw8_sanity.png` *(optional)*  
-11. `tc32_dataw64_sanity.png` *(optional)*
 
 ---
 

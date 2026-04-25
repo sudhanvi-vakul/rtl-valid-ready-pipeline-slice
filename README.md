@@ -197,36 +197,36 @@ Assertions strengthen protocol checking for:
 
 | Test ID | Name | Scope | Status |
 |---|---|---|---|
-| TC01 | Reset Default State | baseline | TODO |
-| TC02 | First Accept Into Empty Slice | baseline | TODO |
-| TC03 | First Output Transfer | baseline | TODO |
-| TC04 | Hold Under Downstream Stall | baseline | TODO |
-| TC05 | Drain To Empty | baseline | TODO |
-| TC06 | Bubble Then Refill | baseline | TODO |
-| TC07 | Back-to-Back Throughput | baseline | TODO |
-| TC08 | Alternating Input Valid | baseline | TODO |
-| TC09 | Alternating Output Ready | baseline | TODO |
-| TC10 | Simultaneous Consume And Refill | baseline | TODO |
-| TC11 | Long Burst Transfer | baseline | TODO |
-| TC12 | Output Idle Behavior While Empty | baseline | TODO |
-| TC13 | Input Blocking When Full And Stalled | baseline | TODO |
-| TC14 | Repeated Same Payload Values | baseline | TODO |
-| TC15 | Corner Data Patterns | baseline | TODO |
-| TC16 | Random Valid/Ready Throttling | stress | TODO |
-| TC17 | Long Stall With Persistent Upstream Requests | stress | TODO |
-| TC18 | Random Burst Length Sweep | stress | TODO |
-| TC19 | Reset During Held Valid | reset robustness | TODO |
-| TC20 | Reset During Streaming Traffic | reset robustness | TODO |
-| TC21 | Recovery Immediately After Reset | reset robustness | TODO |
-| TC22 | Transfer Count Accounting | accounting | TODO |
-| TC23 | Assertion Stress Run | assertions | TODO |
-| TC24 | Skid Disabled Reference Behavior | skid reference | TODO |
-| TC25 | Skid Single Extra Capture | skid | TODO |
-| TC26 | Skid Hold And Drain Ordering | skid | TODO |
-| TC27 | Skid With Repeated Backpressure Pulses | skid | TODO |
-| TC28 | Skid Random Traffic Stress | skid | TODO |
-| TC29 | DATA_W = 8 Sanity Run | width sweep | TODO |
-| TC30 | DATA_W = 32 Sanity Run | width sweep | TODO |
+| TC01 | Reset Default State | baseline | PASS |
+| TC02 | First Accept Into Empty Slice | baseline | PASS |
+| TC03 | First Output Transfer | baseline | PASS |
+| TC04 | Hold Under Downstream Stall | baseline | PASS |
+| TC05 | Drain To Empty | baseline | PASS |
+| TC06 | Bubble Then Refill | baseline | PASS |
+| TC07 | Back-to-Back Throughput | baseline | PASS |
+| TC08 | Alternating Input Valid | baseline | PASS |
+| TC09 | Alternating Output Ready | baseline | PASS |
+| TC10 | Simultaneous Consume And Refill | baseline | PASS |
+| TC11 | Long Burst Transfer | baseline | PASS |
+| TC12 | Output Idle Behavior While Empty | baseline | PASS |
+| TC13 | Input Blocking When Full And Stalled | baseline | PASS |
+| TC14 | Repeated Same Payload Values | baseline | PASS |
+| TC15 | Corner Data Patterns | baseline | PASS |
+| TC16 | Random Valid/Ready Throttling | stress | PASS |
+| TC17 | Long Stall With Persistent Upstream Requests | stress | PASS |
+| TC18 | Random Burst Length Sweep | stress | PASS |
+| TC19 | Reset During Held Valid | reset robustness | PASS |
+| TC20 | Reset During Streaming Traffic | reset robustness | PASS |
+| TC21 | Recovery Immediately After Reset | reset robustness | PASS |
+| TC22 | Transfer Count Accounting | accounting | PASS |
+| TC23 | Assertion Stress Run | assertions | PASS |
+| TC24 | Skid Disabled Reference Behavior | skid reference | PASS |
+| TC25 | Skid Single Extra Capture | skid | PASS |
+| TC26 | Skid Hold And Drain Ordering | skid | PASS |
+| TC27 | Skid With Repeated Backpressure Pulses | skid | PASS |
+| TC28 | Skid Random Traffic Stress | skid | PASS |
+| TC29 | DATA_W = 8 Sanity Run | width sweep | PASS |
+| TC30 | DATA_W = 32 Sanity Run | width sweep | PASS |
 | TC31 | Occupancy / Debug Signal Consistency | debug visibility | TODO |
 | TC32 | Skid On/Off Shared Scenario Comparison | regression | TODO |
 
