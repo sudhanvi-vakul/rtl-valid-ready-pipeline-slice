@@ -1,0 +1,24 @@
+#-----------------------------------------------------------
+# xsim v2019.2 (64-bit)
+# SW Build 2708876 on Wed Nov  6 21:39:14 MST 2019
+# IP Build 2700528 on Thu Nov  7 00:09:20 MST 2019
+# Start of session at: Sat Apr 25 15:34:16 2026
+# Process ID: 120065
+# Current directory: /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153409
+# Command line: xsim -mode tcl -source {xsim.dir/work.sim/xsim_script.tcl}
+# Log file: /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153409/xsim.log
+# Journal file: /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153409/xsim.jou
+#-----------------------------------------------------------
+source xsim.dir/work.sim/xsim_script.tcl
+# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153409/run.tcl} -onfinish quit -onerror quit
+Vivado Simulator 2019.2
+Time resolution is 1 ps
+source /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153409/run.tcl
+## log_wave -r /
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+## run all
+TC32 Skid On/Off Shared Scenario Comparison
+[TB PASS] vr_slice_compare_tb
+$finish called at time : 155 ns : File "/home/vsudhanvi/rtl-valid-ready-pipeline-slice/tb/vr_slice_compare_tb.sv" Line 164
+exit 0
+INFO: [Common 17-206] Exiting xsim at Sat Apr 25 15:34:24 2026...

@@ -1,0 +1,31 @@
+run_id: run_20260425_153224
+suite: regress
+tool: xsim
+results:
+- name: vr_slice_flow
+  rc: 0
+  log: reports/run_20260425_153224/logs/vr_slice_flow.log
+- name: vr_slice_stress
+  rc: 0
+  log: reports/run_20260425_153224/logs/vr_slice_stress.log
+- name: vr_slice_noskid_ref
+  rc: 0
+  log: reports/run_20260425_153224/logs/vr_slice_noskid_ref.log
+- name: vr_slice_skid
+  rc: 0
+  log: reports/run_20260425_153224/logs/vr_slice_skid.log
+- name: vr_slice_w8
+  rc: 0
+  log: reports/run_20260425_153224/logs/vr_slice_w8.log
+- name: vr_slice_w32
+  rc: 0
+  log: reports/run_20260425_153224/logs/vr_slice_w32.log
+- name: vr_slice_debug
+  rc: 0
+  log: reports/run_20260425_153224/logs/vr_slice_debug.log
+- name: vr_slice_compare
+  rc: 0
+  log: reports/run_20260425_153224/logs/vr_slice_compare.log
+- name: vr_slice_integrated
+  rc: 0
+  log: reports/run_20260425_153224/logs/vr_slice_integrated.log

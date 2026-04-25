@@ -1,0 +1,32 @@
+#-----------------------------------------------------------
+# xsim v2019.2 (64-bit)
+# SW Build 2708876 on Wed Nov  6 21:39:14 MST 2019
+# IP Build 2700528 on Thu Nov  7 00:09:20 MST 2019
+# Start of session at: Sat Apr 25 15:32:46 2026
+# Process ID: 115432
+# Current directory: /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153239
+# Command line: xsim -mode tcl -source {xsim.dir/work.sim/xsim_script.tcl}
+# Log file: /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153239/xsim.log
+# Journal file: /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153239/xsim.jou
+#-----------------------------------------------------------
+source xsim.dir/work.sim/xsim_script.tcl
+# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153239/run.tcl} -onfinish quit -onerror quit
+Vivado Simulator 2019.2
+Time resolution is 1 ps
+source /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153239/run.tcl
+## log_wave -r /
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+## run all
+TC16 Random Valid/Ready Throttling
+TC17 Long Stall With Persistent Upstream Requests
+TC18 Random Burst Length Sweep
+TC19 Reset During Held Valid
+TC20 Reset During Streaming Traffic
+TC21 Recovery Immediately After Reset
+TC22 Transfer Count Accounting
+TC23 Assertion Stress Run
+[PASS] stress
+[TB PASS] vr_slice_tb_base DATA_W=16 SKID_EN=0 TEST_GROUP=3
+$finish called at time : 3896 ns : File "/home/vsudhanvi/rtl-valid-ready-pipeline-slice/tb/vr_slice_tb_base.sv" Line 810
+exit 0
+INFO: [Common 17-206] Exiting xsim at Sat Apr 25 15:32:54 2026...

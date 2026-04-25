@@ -1,0 +1,13 @@
+run_id: run_20260425_153424
+suite: regress
+test: vr_slice_integrated
+tool: xsim
+top: vr_slice_integrated_tb
+waves: true
+sources:
+- rtl/vr_slice.sv
+- tb/assertions/vr_slice_sva.sv
+- tb/vr_slice_tb_base.sv
+- tb/vr_slice_integrated_tb.sv
+defines: []
+plusargs: []

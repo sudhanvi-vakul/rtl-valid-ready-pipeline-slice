@@ -1,0 +1,4 @@
+[cmd] /apps/xilinx/Vivado/2019.2/bin/xvlog -sv /home/vsudhanvi/rtl-valid-ready-pipeline-slice/rtl/vr_slice.sv /home/vsudhanvi/rtl-valid-ready-pipeline-slice/tb/assertions/vr_slice_sva.sv /home/vsudhanvi/rtl-valid-ready-pipeline-slice/tb/vr_slice_tb_base.sv /home/vsudhanvi/rtl-valid-ready-pipeline-slice/tb/vr_slice_skid_tb.sv
+[cmd] /apps/xilinx/Vivado/2019.2/bin/xelab -debug typical vr_slice_skid_tb -snapshot work.sim
+[cmd] /apps/xilinx/Vivado/2019.2/bin/xsim work.sim -onfinish quit -onerror quit -tclbatch /home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153309/run.tcl
+[ok] reports saved to reports/run_20260425_153309

@@ -1,0 +1,332 @@
+# Consolidated Regression Summary
+
+Generated: 2026-04-25T17:02:53
+
+## Totals
+
+- Total run folders summarized: 12
+- Passed: 12
+- Failed: 0
+- Unknown: 0
+
+## Results
+
+| Test Name | Status | Run Directory | Log |
+|---|---|---|---|
+| vr_slice_integrated | PASS | `reports/run_20260425_151024` | `reports/run_20260425_151024/xsim.log` |
+| vr_slice_flow | PASS | `reports/run_20260425_153224` | `reports/run_20260425_153224/xsim.log` |
+| vr_slice_stress | PASS | `reports/run_20260425_153239` | `reports/run_20260425_153239/xsim.log` |
+| vr_slice_noskid_ref | PASS | `reports/run_20260425_153254` | `reports/run_20260425_153254/xsim.log` |
+| vr_slice_skid | PASS | `reports/run_20260425_153309` | `reports/run_20260425_153309/xsim.log` |
+| vr_slice_w8 | PASS | `reports/run_20260425_153324` | `reports/run_20260425_153324/xsim.log` |
+| vr_slice_w32 | PASS | `reports/run_20260425_153339` | `reports/run_20260425_153339/xsim.log` |
+| vr_slice_debug | PASS | `reports/run_20260425_153354` | `reports/run_20260425_153354/xsim.log` |
+| vr_slice_compare | PASS | `reports/run_20260425_153409` | `reports/run_20260425_153409/xsim.log` |
+| vr_slice_integrated | PASS | `reports/run_20260425_153424` | `reports/run_20260425_153424/xsim.log` |
+| vr_slice_flow | PASS | `reports/run_20260425_153828` | `reports/run_20260425_153828/xsim.log` |
+| vr_slice | PASS | `reports/run_smoketest` | `reports/run_smoketest/xsim.log` |
+
+## Grep Summary
+
+Pattern used: `grep -nE "TC[0-9][0-9]|PASS|FAIL|ERROR|MISMATCH|ASSERT" <xsim.log>`
+
+### vr_slice_integrated
+
+Test name: `vr_slice_integrated`
+
+Status: `PASS`
+
+Run directory: `reports/run_20260425_151024`
+
+Log: `reports/run_20260425_151024/xsim.log`
+
+```text
+13:# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_151024/run.tcl} -onfinish quit -onerror quit
+20:TC01 Reset Default State
+21:TC02 First Accept Into Empty Slice
+22:TC03 First Output Transfer
+23:TC04 Hold Under Downstream Stall
+24:TC07 Back-to-Back Throughput
+25:TC10 Simultaneous Consume And Refill
+26:TC16 Random Valid/Ready Throttling
+27:TC25 Skid Single Extra Capture
+28:TC26 Skid Hold And Drain Ordering
+29:TC31 Occupancy / Debug Signal Consistency
+30:[PASS] integrated
+31:[TB PASS] vr_slice_tb_base DATA_W=16 SKID_EN=1 TEST_GROUP=900
+```
+
+### vr_slice_flow
+
+Test name: `vr_slice_flow`
+
+Status: `PASS`
+
+Run directory: `reports/run_20260425_153224`
+
+Log: `reports/run_20260425_153224/xsim.log`
+
+```text
+13:# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153224/run.tcl} -onfinish quit -onerror quit
+20:TC04 Hold Under Downstream Stall
+21:TC05 Drain To Empty
+22:TC06 Bubble Then Refill
+23:TC07 Back-to-Back Throughput
+24:TC08 Alternating Input Valid
+25:TC09 Alternating Output Ready
+26:TC10 Simultaneous Consume And Refill
+27:TC11 Long Burst Transfer
+28:TC12 Output Idle Behavior While Empty
+29:TC13 Input Blocking When Full And Stalled
+30:TC14 Repeated Same Payload Values
+31:TC15 Corner Data Patterns
+32:[PASS] flow
+33:[TB PASS] vr_slice_tb_base DATA_W=16 SKID_EN=0 TEST_GROUP=2
+```
+
+### vr_slice_stress
+
+Test name: `vr_slice_stress`
+
+Status: `PASS`
+
+Run directory: `reports/run_20260425_153239`
+
+Log: `reports/run_20260425_153239/xsim.log`
+
+```text
+13:# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153239/run.tcl} -onfinish quit -onerror quit
+20:TC16 Random Valid/Ready Throttling
+21:TC17 Long Stall With Persistent Upstream Requests
+22:TC18 Random Burst Length Sweep
+23:TC19 Reset During Held Valid
+24:TC20 Reset During Streaming Traffic
+25:TC21 Recovery Immediately After Reset
+26:TC22 Transfer Count Accounting
+27:TC23 Assertion Stress Run
+28:[PASS] stress
+29:[TB PASS] vr_slice_tb_base DATA_W=16 SKID_EN=0 TEST_GROUP=3
+```
+
+### vr_slice_noskid_ref
+
+Test name: `vr_slice_noskid_ref`
+
+Status: `PASS`
+
+Run directory: `reports/run_20260425_153254`
+
+Log: `reports/run_20260425_153254/xsim.log`
+
+```text
+13:# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153254/run.tcl} -onfinish quit -onerror quit
+20:TC24 Skid Disabled Reference Behavior
+21:[PASS] noskid_ref
+22:[TB PASS] vr_slice_tb_base DATA_W=16 SKID_EN=0 TEST_GROUP=4
+```
+
+### vr_slice_skid
+
+Test name: `vr_slice_skid`
+
+Status: `PASS`
+
+Run directory: `reports/run_20260425_153309`
+
+Log: `reports/run_20260425_153309/xsim.log`
+
+```text
+13:# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153309/run.tcl} -onfinish quit -onerror quit
+20:TC25 Skid Single Extra Capture
+21:TC26 Skid Hold And Drain Ordering
+22:TC27 Skid With Repeated Backpressure Pulses
+23:TC28 Skid Random Traffic Stress
+24:[PASS] skid
+25:[TB PASS] vr_slice_tb_base DATA_W=16 SKID_EN=1 TEST_GROUP=5
+```
+
+### vr_slice_w8
+
+Test name: `vr_slice_w8`
+
+Status: `PASS`
+
+Run directory: `reports/run_20260425_153324`
+
+Log: `reports/run_20260425_153324/xsim.log`
+
+```text
+13:# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153324/run.tcl} -onfinish quit -onerror quit
+20:TC29 DATA_W = 8 Sanity Run
+21:[PASS] width8
+22:[TB PASS] vr_slice_tb_base DATA_W=8 SKID_EN=0 TEST_GROUP=6
+```
+
+### vr_slice_w32
+
+Test name: `vr_slice_w32`
+
+Status: `PASS`
+
+Run directory: `reports/run_20260425_153339`
+
+Log: `reports/run_20260425_153339/xsim.log`
+
+```text
+13:# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153339/run.tcl} -onfinish quit -onerror quit
+20:TC30 DATA_W = 32 Sanity Run
+21:[PASS] width32
+22:[TB PASS] vr_slice_tb_base DATA_W=32 SKID_EN=1 TEST_GROUP=7
+```
+
+### vr_slice_debug
+
+Test name: `vr_slice_debug`
+
+Status: `PASS`
+
+Run directory: `reports/run_20260425_153354`
+
+Log: `reports/run_20260425_153354/xsim.log`
+
+```text
+13:# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153354/run.tcl} -onfinish quit -onerror quit
+20:TC31 Occupancy / Debug Signal Consistency
+21:[PASS] debug
+22:[TB PASS] vr_slice_tb_base DATA_W=16 SKID_EN=1 TEST_GROUP=8
+```
+
+### vr_slice_compare
+
+Test name: `vr_slice_compare`
+
+Status: `PASS`
+
+Run directory: `reports/run_20260425_153409`
+
+Log: `reports/run_20260425_153409/xsim.log`
+
+```text
+13:# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153409/run.tcl} -onfinish quit -onerror quit
+20:TC32 Skid On/Off Shared Scenario Comparison
+21:[TB PASS] vr_slice_compare_tb
+```
+
+### vr_slice_integrated
+
+Test name: `vr_slice_integrated`
+
+Status: `PASS`
+
+Run directory: `reports/run_20260425_153424`
+
+Log: `reports/run_20260425_153424/xsim.log`
+
+```text
+13:# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153424/run.tcl} -onfinish quit -onerror quit
+20:TC01 Reset Default State
+21:TC02 First Accept Into Empty Slice
+22:TC03 First Output Transfer
+23:TC04 Hold Under Downstream Stall
+24:TC07 Back-to-Back Throughput
+25:TC10 Simultaneous Consume And Refill
+26:TC16 Random Valid/Ready Throttling
+27:TC25 Skid Single Extra Capture
+28:TC26 Skid Hold And Drain Ordering
+29:TC31 Occupancy / Debug Signal Consistency
+30:[PASS] integrated
+31:[TB PASS] vr_slice_tb_base DATA_W=16 SKID_EN=1 TEST_GROUP=900
+```
+
+### vr_slice_flow
+
+Test name: `vr_slice_flow`
+
+Status: `PASS`
+
+Run directory: `reports/run_20260425_153828`
+
+Log: `reports/run_20260425_153828/xsim.log`
+
+```text
+13:# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260425_153828/run.tcl} -onfinish quit -onerror quit
+20:TC04 Hold Under Downstream Stall
+21:TC05 Drain To Empty
+22:TC06 Bubble Then Refill
+23:TC07 Back-to-Back Throughput
+24:TC08 Alternating Input Valid
+25:TC09 Alternating Output Ready
+26:TC10 Simultaneous Consume And Refill
+27:TC11 Long Burst Transfer
+28:TC12 Output Idle Behavior While Empty
+29:TC13 Input Blocking When Full And Stalled
+30:TC14 Repeated Same Payload Values
+31:TC15 Corner Data Patterns
+32:[PASS] flow
+33:[TB PASS] vr_slice_tb_base DATA_W=16 SKID_EN=0 TEST_GROUP=2
+```
+
+### vr_slice
+
+Test name: `vr_slice`
+
+Status: `PASS`
+
+Run directory: `reports/run_smoketest`
+
+Log: `reports/run_smoketest/xsim.log`
+
+```text
+13:# xsim {work.sim} -autoloadwcfg -tclbatch {/home/vsudhanvi/rtl-valid-ready-pipeline-slice/reports/run_20260408_085800/run.tcl} -onfinish quit -onerror quit
+22:TC01 Reset Default State
+29:TC01 Reset Default State : PASS
+32:TC02 First Accept Into Empty Slice
+39:TC02 First Accept Into Empty Slice : PASS
+42:TC03 First Output Transfer
+49:TC03 First Output Transfer : PASS
+52:TC04 Hold Under Downstream Stall
+59:TC04 Hold Under Downstream Stall : PASS
+62:TC05 Drain To Empty
+69:TC05 Drain To Empty : PASS
+72:TC06 Bubble Then Refill
+79:TC06 Bubble Then Refill : PASS
+82:TC07 Back-to-Back Throughput
+89:TC07 Back-to-Back Throughput : PASS
+92:TC08 Alternating Input Valid
+99:TC08 Alternating Input Valid : PASS
+102:TC09 Alternating Output Ready
+109:TC09 Alternating Output Ready : PASS
+112:TC10 Simultaneous Consume And Refill
+119:TC10 Simultaneous Consume And Refill : PASS
+122:TC11 Long Burst Transfer
+129:TC11 Long Burst Transfer : PASS
+132:TC12 Output Idle Behavior While Empty
+139:TC12 Output Idle Behavior While Empty : PASS
+142:TC13 Input Blocking When Full And Stalled
+149:TC13 Input Blocking When Full And Stalled : PASS
+152:TC14 Repeated Same Payload Values
+159:TC14 Repeated Same Payload Values : PASS
+162:TC15 Corner Data Patterns
+169:TC15 Corner Data Patterns : PASS
+172:TC16 Random Valid/Ready Throttling
+179:TC16 Random Valid/Ready Throttling : PASS
+182:TC17 Long Stall With Persistent Upstream Requests
+189:TC17 Long Stall With Persistent Upstream Requests : PASS
+192:TC18 Random Burst Length Sweep
+199:TC18 Random Burst Length Sweep : PASS
+202:TC19 Reset During Held Valid
+209:TC19 Reset During Held Valid : PASS
+212:TC20 Reset During Streaming Traffic
+219:TC20 Reset During Streaming Traffic : PASS
+222:TC21 Recovery Immediately After Reset
+229:TC21 Recovery Immediately After Reset : PASS
+232:TC22 Transfer Count Accounting
+239:TC22 Transfer Count Accounting : PASS
+242:TC23 Assertion Stress Run
+249:TC23 Assertion Stress Run : PASS
+252:TC24-TC28 Skid Suite
+260:TC24-TC28 Skid Suite : PASS
+265:  Tests failed       : 0
+272:ALL TESTS PASSED
+```
+
