@@ -5,6 +5,11 @@ from pathlib import Path
 from datetime import datetime
 
 
+RESULT_RE = re.compile(
+    r"TC[0-9][0-9]|PASS|FAIL|ERROR|MISMATCH|ASSERT",
+    re.IGNORECASE,
+)
+
 PASS_RE = re.compile(r"\b(TB PASS|PASS|\[PASS\])\b", re.IGNORECASE)
 FAIL_RE = re.compile(r"\b(TB FAIL|FAIL|ERROR|MISMATCH|ASSERT|FATAL)\b", re.IGNORECASE)
 
@@ -15,10 +20,23 @@ def read_yaml(path):
     return {}
 
 
-def classify_log(log_text):
-    if FAIL_RE.search(log_text):
+def grep_log_lines(log_path):
+    lines = []
+    text_lines = log_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+
+    for idx, line in enumerate(text_lines, start=1):
+        if RESULT_RE.search(line):
+            lines.append(f"{idx}:{line}")
+
+    return lines
+
+
+def classify_from_grep(grep_lines):
+    joined = "\n".join(grep_lines)
+
+    if FAIL_RE.search(joined):
         return "FAIL"
-    if PASS_RE.search(log_text):
+    if PASS_RE.search(joined):
         return "PASS"
     return "UNKNOWN"
 
@@ -32,7 +50,6 @@ def get_test_name(run_dir):
     if results.get("test"):
         return results["test"]
 
-    # Fallback if no metadata file exists
     return run_dir.name
 
 
@@ -40,7 +57,6 @@ def summarize_reports(reports_dir):
     reports_dir = Path(reports_dir)
     rows = []
 
-    # Summarize every folder inside reports/ whose name starts with "run"
     for run_dir in sorted(reports_dir.glob("run*")):
         if not run_dir.is_dir():
             continue
@@ -49,9 +65,9 @@ def summarize_reports(reports_dir):
         if not log_path.exists():
             continue
 
-        log_text = log_path.read_text(encoding="utf-8", errors="ignore")
+        grep_lines = grep_log_lines(log_path)
         test_name = get_test_name(run_dir)
-        status = classify_log(log_text)
+        status = classify_from_grep(grep_lines)
 
         rows.append(
             {
@@ -59,6 +75,7 @@ def summarize_reports(reports_dir):
                 "status": status,
                 "run_dir": str(run_dir).replace("\\", "/"),
                 "log": str(log_path).replace("\\", "/"),
+                "grep_lines": grep_lines,
             }
         )
 
@@ -92,6 +109,33 @@ def write_markdown(rows, out_path):
         lines.append(
             f"| {r['test']} | {r['status']} | `{r['run_dir']}` | `{r['log']}` |"
         )
+
+    lines.append("")
+    lines.append("## Grep Summary")
+    lines.append("")
+    lines.append(
+        'Pattern used: `grep -nE "TC[0-9][0-9]|PASS|FAIL|ERROR|MISMATCH|ASSERT" <xsim.log>`'
+    )
+    lines.append("")
+
+    for r in rows:
+        lines.append(f"### {r['test']}")
+        lines.append("")
+        lines.append(f"Run directory: `{r['run_dir']}`")
+        lines.append("")
+        lines.append(f"Log: `{r['log']}`")
+        lines.append("")
+
+        if r["grep_lines"]:
+            lines.append("```text")
+            lines.extend(r["grep_lines"])
+            lines.append("```")
+        else:
+            lines.append("```text")
+            lines.append("No matching lines found.")
+            lines.append("```")
+
+        lines.append("")
 
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
