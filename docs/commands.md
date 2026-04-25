@@ -153,6 +153,10 @@ grep -nE "PASS|FAIL|ERROR|MISMATCH|ASSERT" $latest/xsim.log
 
 ---
 
+## Summarize regression
+
+python3 -m scripts.summary
+cat reports/regression_summary.md
 
 ## Optional manual compile flow (debug only)
 
