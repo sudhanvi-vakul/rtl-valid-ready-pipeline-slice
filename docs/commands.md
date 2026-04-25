@@ -77,7 +77,11 @@ python3 -m scripts.run --tool xsim --suite smoke --test vr_slice --waves
 ```
 ---
 
-### Smoke test without waves
+### Full suite
+```csh
+python3 -m scripts.regress --tool xsim --suite regress --waves
+```
+### Each Regression run
 
 python3 -m scripts.run --tool xsim --suite regress --test vr_slice_flow --waves
 python3 -m scripts.run --tool xsim --suite regress --test vr_slice_stress --waves
@@ -89,14 +93,6 @@ python3 -m scripts.run --tool xsim --suite regress --test vr_slice_debug --waves
 python3 -m scripts.run --tool xsim --suite regress --test vr_slice_compare --waves
 python3 -m scripts.run --tool xsim --suite regress --test vr_slice_integrated --waves
 
-
-## Regression run
-
-### Full suite
-```csh
-python3 -m scripts.run --tool xsim --suite regress --test vr_slice --waves
-```
-
 ### If using a dedicated regression wrapper
 ```csh
 python3 -m scripts.regress --tool xsim --suite regress
@@ -106,6 +102,7 @@ python3 -m scripts.regress --tool xsim --suite regress
 
 ## Scan log for testcase summary and failures
 ```csh
+set latest=`ls -td reports/run_* | head -1`
 grep -nE "TC[0-9][0-9]|PASS|FAIL|ERROR|MISMATCH|ASSERT" $latest/xsim.log
 ```
 
