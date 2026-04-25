@@ -102,7 +102,7 @@ def write_markdown(rows, out_path):
     lines.append("")
     lines.append("## Results")
     lines.append("")
-    lines.append("| Test | Status | Run Directory | Log |")
+    lines.append("| Test Name | Status | Run Directory | Log |")
     lines.append("|---|---|---|---|")
 
     for r in rows:
@@ -120,6 +120,10 @@ def write_markdown(rows, out_path):
 
     for r in rows:
         lines.append(f"### {r['test']}")
+        lines.append("")
+        lines.append(f"Test name: `{r['test']}`")
+        lines.append("")
+        lines.append(f"Status: `{r['status']}`")
         lines.append("")
         lines.append(f"Run directory: `{r['run_dir']}`")
         lines.append("")
